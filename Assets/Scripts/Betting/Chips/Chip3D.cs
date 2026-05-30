@@ -1,14 +1,19 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// Represents a physical 3D roulette chip in the scene.
-/// It stores the denomination value and updates its visual presentation.
+/// It stores the denomination value, updates its visual presentation,
+/// and handles physics-based drag-and-drop onto table bet spots.
 /// </summary>
+[DisallowMultipleComponent]
 public sealed class Chip3D : MonoBehaviour
 {
     private static readonly int BaseColorShaderProperty = Shader.PropertyToID("_BaseColor");
     private static readonly int ColorShaderProperty = Shader.PropertyToID("_Color");
+    private static Chip3D _activeDraggedChip;
 
     [SerializeField]
     private int _value;
@@ -28,13 +33,100 @@ public sealed class Chip3D : MonoBehaviour
     [SerializeField]
     private TextMeshPro _valueText;
 
+    [Header("Drag And Drop")]
+    [SerializeField]
+    [Min(0f)]
+    private float _dragPlaneHeight = 1f;
+
+    [SerializeField]
+    [Min(0f)]
+    private float _dragHoverOffset = 0.35f;
+
+    [SerializeField]
+    [Min(1f)]
+    private float _dropRayDistance = 10f;
+
+    [SerializeField]
+    [Min(0f)]
+    private float _dropRayStartOffset = 1f;
+
+    [SerializeField]
+    [Min(0.01f)]
+    private float _returnDuration = 0.2f;
+
+    [SerializeField]
+    [Min(0f)]
+    private float _dragFollowSpeed = 20f;
+
+    [SerializeField]
+    [Min(1f)]
+    private float _dragScaleMultiplier = 1.08f;
+
+    [SerializeField]
+    [Range(0f, 20f)]
+    private float _maxTiltAngle = 8f;
+
+    [SerializeField]
+    [Min(0f)]
+    private float _tiltSensitivity = 10f;
+
+    [SerializeField]
+    [Min(0f)]
+    private float _visualFollowSpeed = 14f;
+
+    [SerializeField]
+    [Min(0.01f)]
+    private float _dropSnapDuration = 0.12f;
+
     private MaterialPropertyBlock _materialPropertyBlock;
+    private Collider[] _colliders;
+    private Coroutine _returnToOriginCoroutine;
+    private Coroutine _settleCoroutine;
+    private Plane _dragPlane;
+    private Transform _dragStartParent;
+    private Vector3 _dragStartLocalPosition;
+    private Vector3 _dragStartLocalScale;
+    private Quaternion _dragStartLocalRotation;
+    private Quaternion _dragStartWorldRotation;
+    private Vector3 _lastDragTargetPosition;
+    private bool _isDragging;
 
     public int Value => _value;
 
     private void Awake()
     {
         CacheReferencesIfNeeded();
+        _colliders = GetComponentsInChildren<Collider>();
+    }
+
+    private void Update()
+    {
+        Mouse mouse = Mouse.current;
+
+        if (mouse == null)
+        {
+            return;
+        }
+
+        if (mouse.leftButton.wasPressedThisFrame)
+        {
+            TryBeginDrag(mouse.position.ReadValue());
+        }
+
+        if (_activeDraggedChip != this)
+        {
+            return;
+        }
+
+        if (mouse.leftButton.isPressed)
+        {
+            DragToPointer(mouse.position.ReadValue());
+        }
+
+        if (mouse.leftButton.wasReleasedThisFrame)
+        {
+            EndDrag();
+        }
     }
 
 #if UNITY_EDITOR
@@ -48,6 +140,114 @@ public sealed class Chip3D : MonoBehaviour
     {
         _value = value;
         ApplyVisuals(value, bodyColor, stripeColor, textColor);
+    }
+
+    private void TryBeginDrag(Vector2 screenPosition)
+    {
+        if (_activeDraggedChip != null)
+        {
+            return;
+        }
+
+        Camera mainCamera = Camera.main;
+
+        if (mainCamera == null)
+        {
+            return;
+        }
+
+        Ray selectionRay = mainCamera.ScreenPointToRay(screenPosition);
+
+        if (!Physics.Raycast(selectionRay, out RaycastHit hit, Mathf.Infinity) || !OwnsCollider(hit.collider))
+        {
+            return;
+        }
+
+        if (_returnToOriginCoroutine != null)
+        {
+            StopCoroutine(_returnToOriginCoroutine);
+            _returnToOriginCoroutine = null;
+            SetCollidersEnabled(true);
+        }
+
+        if (_settleCoroutine != null)
+        {
+            StopCoroutine(_settleCoroutine);
+            _settleCoroutine = null;
+            SetCollidersEnabled(true);
+        }
+
+        _dragStartParent = transform.parent;
+        _dragStartLocalPosition = transform.localPosition;
+        _dragStartLocalScale = transform.localScale;
+        _dragStartLocalRotation = transform.localRotation;
+        _dragStartWorldRotation = transform.rotation;
+        _lastDragTargetPosition = transform.position;
+        float dragPlaneWorldHeight = Mathf.Max(_dragPlaneHeight, transform.position.y + _dragHoverOffset);
+        _dragPlane = new Plane(Vector3.up, new Vector3(0f, dragPlaneWorldHeight, 0f));
+        _isDragging = true;
+        _activeDraggedChip = this;
+
+        transform.SetParent(null, true);
+    }
+
+    private void DragToPointer(Vector2 screenPosition)
+    {
+        if (!_isDragging)
+        {
+            return;
+        }
+
+        Camera mainCamera = Camera.main;
+
+        if (mainCamera == null)
+        {
+            return;
+        }
+
+        Ray dragRay = mainCamera.ScreenPointToRay(screenPosition);
+
+        if (!_dragPlane.Raycast(dragRay, out float enterDistance))
+        {
+            return;
+        }
+
+        Vector3 targetPosition = dragRay.GetPoint(enterDistance);
+        Vector3 movementDelta = targetPosition - _lastDragTargetPosition;
+        _lastDragTargetPosition = targetPosition;
+
+        float interpolationFactor = Mathf.Clamp01(_dragFollowSpeed * Time.deltaTime);
+        transform.position = Vector3.Lerp(transform.position, targetPosition, interpolationFactor);
+
+        float tiltAroundX = Mathf.Clamp(-movementDelta.z * _tiltSensitivity, -_maxTiltAngle, _maxTiltAngle);
+        float tiltAroundZ = Mathf.Clamp(movementDelta.x * _tiltSensitivity, -_maxTiltAngle, _maxTiltAngle);
+        Quaternion targetRotation = _dragStartWorldRotation * Quaternion.Euler(tiltAroundX, 0f, tiltAroundZ);
+        float visualInterpolation = Mathf.Clamp01(_visualFollowSpeed * Time.deltaTime);
+
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, visualInterpolation);
+        transform.localScale = Vector3.Lerp(
+            transform.localScale,
+            _dragStartLocalScale * _dragScaleMultiplier,
+            visualInterpolation);
+    }
+
+    private void EndDrag()
+    {
+        if (!_isDragging)
+        {
+            return;
+        }
+
+        _isDragging = false;
+        _activeDraggedChip = null;
+
+        if (TryPlaceOnBetSpot(out BetSpot betSpot, out Vector3 snapPosition))
+        {
+            _settleCoroutine = StartCoroutine(AnimateDropToBetSpotRoutine(betSpot, snapPosition));
+            return;
+        }
+
+        _returnToOriginCoroutine = StartCoroutine(ReturnToOriginRoutine());
     }
 
     private void ApplyVisuals(int value, Color bodyColor, Color stripeColor, Color textColor)
@@ -138,5 +338,186 @@ public sealed class Chip3D : MonoBehaviour
         }
 
         return sharedMaterials[materialIndex];
+    }
+
+    private bool TryPlaceOnBetSpot(out BetSpot betSpot, out Vector3 snapPosition)
+    {
+        Vector3 rayOrigin = transform.position + (Vector3.up * _dropRayStartOffset);
+        Ray dropRay = new Ray(rayOrigin, Vector3.down);
+
+        RaycastHit[] hits = Physics.RaycastAll(dropRay, _dropRayDistance);
+        System.Array.Sort(hits, (left, right) => left.distance.CompareTo(right.distance));
+
+        for (int i = 0; i < hits.Length; i++)
+        {
+            RaycastHit hit = hits[i];
+
+            if (OwnsCollider(hit.collider))
+            {
+                continue;
+            }
+
+            betSpot = hit.collider.GetComponentInParent<BetSpot>();
+
+            if (betSpot != null)
+            {
+                snapPosition = betSpot.GetSnapPosition(hit, GetChipHeight());
+                return true;
+            }
+        }
+
+        betSpot = null;
+        snapPosition = Vector3.zero;
+        return false;
+    }
+
+    private bool OwnsCollider(Collider targetCollider)
+    {
+        if (targetCollider == null || _colliders == null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < _colliders.Length; i++)
+        {
+            if (_colliders[i] == targetCollider)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private float GetChipHeight()
+    {
+        if (_colliders != null)
+        {
+            for (int i = 0; i < _colliders.Length; i++)
+            {
+                if (_colliders[i] != null)
+                {
+                    return _colliders[i].bounds.size.y;
+                }
+            }
+        }
+
+        if (_chipRenderer != null)
+        {
+            return _chipRenderer.bounds.size.y;
+        }
+
+        return 0.1f;
+    }
+
+    private IEnumerator ReturnToOriginRoutine()
+    {
+        SetCollidersEnabled(false);
+
+        Vector3 startPosition = transform.position;
+        Quaternion startRotation = transform.rotation;
+        Vector3 startScale = transform.localScale;
+        Quaternion targetRotation = _dragStartParent != null
+            ? _dragStartParent.rotation * _dragStartLocalRotation
+            : _dragStartLocalRotation;
+
+        float elapsedTime = 0f;
+
+        while (elapsedTime < _returnDuration)
+        {
+            elapsedTime += Time.deltaTime;
+            float normalizedTime = EaseOut(Mathf.Clamp01(elapsedTime / _returnDuration));
+
+            transform.position = Vector3.Lerp(startPosition, GetDragStartWorldPosition(), normalizedTime);
+            transform.rotation = Quaternion.Slerp(startRotation, targetRotation, normalizedTime);
+            transform.localScale = Vector3.Lerp(startScale, _dragStartLocalScale, normalizedTime);
+
+            yield return null;
+        }
+
+        if (_dragStartParent != null)
+        {
+            transform.SetParent(_dragStartParent, false);
+            transform.localPosition = _dragStartLocalPosition;
+            transform.localRotation = _dragStartLocalRotation;
+            transform.localScale = _dragStartLocalScale;
+        }
+        else
+        {
+            transform.position = GetDragStartWorldPosition();
+            transform.rotation = targetRotation;
+            transform.localScale = _dragStartLocalScale;
+        }
+
+        SetCollidersEnabled(true);
+        _returnToOriginCoroutine = null;
+    }
+
+    private IEnumerator AnimateDropToBetSpotRoutine(BetSpot betSpot, Vector3 snapPosition)
+    {
+        SetCollidersEnabled(false);
+
+        Vector3 startPosition = transform.position;
+        Quaternion startRotation = transform.rotation;
+        Vector3 startScale = transform.localScale;
+        Quaternion targetRotation = _dragStartParent != null
+            ? _dragStartParent.rotation * _dragStartLocalRotation
+            : _dragStartLocalRotation;
+
+        float elapsedTime = 0f;
+
+        while (elapsedTime < _dropSnapDuration)
+        {
+            elapsedTime += Time.deltaTime;
+            float normalizedTime = EaseOut(Mathf.Clamp01(elapsedTime / _dropSnapDuration));
+
+            transform.position = Vector3.Lerp(startPosition, snapPosition, normalizedTime);
+            transform.rotation = Quaternion.Slerp(startRotation, targetRotation, normalizedTime);
+            transform.localScale = Vector3.Lerp(startScale, _dragStartLocalScale, normalizedTime);
+
+            yield return null;
+        }
+
+        transform.position = snapPosition;
+        transform.rotation = targetRotation;
+        transform.localScale = _dragStartLocalScale;
+        transform.SetParent(betSpot.transform, true);
+
+        SetCollidersEnabled(true);
+        _settleCoroutine = null;
+
+        Debug.Log($"Chip value {Value} dropped on bet spot {betSpot.Type}.");
+    }
+
+    private Vector3 GetDragStartWorldPosition()
+    {
+        if (_dragStartParent == null)
+        {
+            return _dragStartLocalPosition;
+        }
+
+        return _dragStartParent.TransformPoint(_dragStartLocalPosition);
+    }
+
+    private void SetCollidersEnabled(bool isEnabled)
+    {
+        if (_colliders == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < _colliders.Length; i++)
+        {
+            if (_colliders[i] != null)
+            {
+                _colliders[i].enabled = isEnabled;
+            }
+        }
+    }
+
+    private float EaseOut(float t)
+    {
+        float inverse = 1f - t;
+        return 1f - (inverse * inverse * inverse);
     }
 }

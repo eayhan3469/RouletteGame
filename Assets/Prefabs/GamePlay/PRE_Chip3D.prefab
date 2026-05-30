@@ -53,6 +53,17 @@ MonoBehaviour:
   _bodyMaterialIndex: 1
   _stripeMaterialIndex: 0
   _valueText: {fileID: 47232389560127328}
+  _dragPlaneHeight: 3
+  _dragHoverOffset: 0.35
+  _dropRayDistance: 10
+  _dropRayStartOffset: 1
+  _returnDuration: 0.2
+  _dragFollowSpeed: 20
+  _dragScaleMultiplier: 1.08
+  _maxTiltAngle: 20
+  _tiltSensitivity: 70
+  _visualFollowSpeed: 14
+  _dropSnapDuration: 0.12
 --- !u!65 &8323502364795518276
 BoxCollider:
   m_ObjectHideFlags: 0
