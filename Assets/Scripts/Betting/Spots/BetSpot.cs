@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -16,15 +17,22 @@ public sealed class BetSpot : MonoBehaviour
     private int[] _coveredNumbers = Array.Empty<int>();
 
     [SerializeField]
-    private bool _snapToCenter = true;
-
-    [SerializeField]
     private Vector3 _snapOffset = Vector3.zero;
 
+    [SerializeField]
+    [Min(0)]
+    private int _currentChipCount;
+
+    [SerializeField]
+    [Min(0.001f)]
+    private float _chipThickness = 0.05f;
+
     private Collider _cachedCollider;
+    private readonly List<Chip3D> _placedChips = new List<Chip3D>();
 
     public BetType Type => _betType;
     public int[] CoveredNumbers => _coveredNumbers;
+    public int CurrentChipCount => _currentChipCount;
 
     private void Awake()
     {
@@ -32,17 +40,49 @@ public sealed class BetSpot : MonoBehaviour
     }
 
     /// <summary>
-    /// Resolves the final placement position for a chip dropped on this bet spot.
+    /// Returns the collider bounds used both for hover highlighting
+    /// and for calculating chip placement positions.
     /// </summary>
-    public Vector3 GetSnapPosition(RaycastHit hit, float chipHeight)
+    public Bounds GetWorldBounds()
     {
-        Collider targetCollider = _cachedCollider != null ? _cachedCollider : hit.collider;
-        Vector3 snapPosition = _snapToCenter ? targetCollider.bounds.center : hit.point;
+        Collider targetCollider = _cachedCollider != null ? _cachedCollider : GetComponent<Collider>();
+        return targetCollider.bounds;
+    }
 
-        snapPosition.y = targetCollider.bounds.max.y + (chipHeight * 0.5f);
-        snapPosition += _snapOffset;
+    /// <summary>
+    /// Returns the next stack position for a chip placed on this bet spot.
+    /// </summary>
+    public Vector3 GetNextDropPosition()
+    {
+        Bounds bounds = GetWorldBounds();
+        Vector3 basePosition = bounds.center;
 
-        return snapPosition;
+        basePosition.y = bounds.max.y + (_chipThickness * 0.5f);
+        basePosition += _snapOffset;
+
+        return basePosition + (Vector3.up * (_currentChipCount * _chipThickness));
+    }
+
+    public void RegisterChip(Chip3D chip)
+    {
+        if (chip == null || _placedChips.Contains(chip))
+        {
+            return;
+        }
+
+        _placedChips.Add(chip);
+        _currentChipCount = _placedChips.Count;
+    }
+
+    public void UnregisterChip(Chip3D chip)
+    {
+        if (chip == null)
+        {
+            return;
+        }
+
+        _placedChips.Remove(chip);
+        _currentChipCount = _placedChips.Count;
     }
 }
 

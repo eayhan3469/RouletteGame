@@ -275,7 +275,7 @@ Transform:
   m_GameObject: {fileID: 92913550}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 18.91, y: 1.75, z: 0.81}
+  m_LocalPosition: {x: 18.91, y: 1.2, z: 0.81}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -295,8 +295,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 0e000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &92913553
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -316,8 +317,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
+  m_Center: {x: -0.2467761, y: 0, z: 0.16}
 --- !u!1 &100100000
 GameObject:
   m_ObjectHideFlags: 0
@@ -409,6 +410,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 100100021}
+  - component: {fileID: 100100022}
   m_Layer: 0
   m_Name: Systems
   m_TagString: Untagged
@@ -428,9 +430,132 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 100100026}
   m_Father: {fileID: 100100001}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &100100022
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100100020}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c39da7e264b14ad4a8f02ce782b2fa82, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BetManager
+  _activeBets: []
+--- !u!1 &100100025
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 100100026}
+  - component: {fileID: 100100027}
+  - component: {fileID: 100100028}
+  m_Layer: 0
+  m_Name: SharedBetSpotHighlighter
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &100100026
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100100025}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 100100021}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &100100027
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100100025}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 289eb57436234970a8714dc8b521b373, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BetSpotHighlighter
+  _spriteRenderer: {fileID: 100100028}
+  _highlightSprite: {fileID: 21300000, guid: 510edefed123d9949a052d8f33b068c0, type: 3}
+  _highlightColor: {r: 1, g: 0.9, b: 0.2, a: 0.35}
+  _verticalOffset: 0.02
+  _sizePadding: {x: 0.02, y: 0.02}
+--- !u!212 &100100028
+SpriteRenderer:
+  serializedVersion: 2
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100100025}
+  m_Enabled: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 0
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 50
+  m_MaskInteraction: 0
+  m_Sprite: {fileID: 21300000, guid: 510edefed123d9949a052d8f33b068c0, type: 3}
+  m_Color: {r: 1, g: 0.9, b: 0.2, a: 0.35}
+  m_FlipX: 0
+  m_FlipY: 0
+  m_DrawMode: 1
+  m_Size: {x: 0.04, y: 0.04}
+  m_AdaptiveModeThreshold: 0.5
+  m_SpriteTileMode: 0
+  m_WasSpriteAssigned: 1
+  m_SpriteSortPoint: 0
 --- !u!1 &100100030
 GameObject:
   m_ObjectHideFlags: 0
@@ -1882,7 +2007,7 @@ Transform:
   m_GameObject: {fileID: 288178758}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 29.75, y: 1.75, z: -1.96}
+  m_LocalPosition: {x: 29.75, y: 1.2, z: -1.96}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1902,8 +2027,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 22000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &288178761
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1923,7 +2049,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
   m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
 --- !u!1 &294077994
 GameObject:
@@ -1952,7 +2078,7 @@ Transform:
   m_GameObject: {fileID: 294077994}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 25.07, y: 1.75, z: 0.81}
+  m_LocalPosition: {x: 25.07, y: 1.2, z: 0.81}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1972,8 +2098,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 1a000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &294077997
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1993,8 +2120,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
+  m_Center: {x: -0.22, y: 0, z: 0.16}
 --- !u!1 &300210000
 GameObject:
   m_ObjectHideFlags: 0
@@ -2055,7 +2182,7 @@ Transform:
   m_GameObject: {fileID: 300210010}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 10.95, y: 1.75, z: 1.04}
+  m_LocalPosition: {x: 10.95, y: 1.2, z: 1.04}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2080,8 +2207,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.1273031, y: 0.05, z: 7.609531}
-  m_Center: {x: -0.012665272, y: 0, z: -0.037993193}
+  m_Size: {x: 1.385911, y: 0.05, z: 8.034979}
+  m_Center: {x: -0.0030875206, y: 0, z: -0.055143237}
 --- !u!114 &300210013
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2096,8 +2223,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 00000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!1 &300210020
 GameObject:
   m_ObjectHideFlags: 0
@@ -2125,7 +2253,7 @@ Transform:
   m_GameObject: {fileID: 300210020}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 14.92, y: 1.75, z: -3.75}
+  m_LocalPosition: {x: 14.92, y: 1.2, z: -3.75}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2150,8 +2278,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 3.9, y: 0.05, z: 1.1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 6.0445414, y: 0.05, z: 1.1815414}
+  m_Center: {x: -0.11823511, y: 0, z: -0.032616615}
 --- !u!114 &300210023
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2166,8 +2294,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 5
   _coveredNumbers: 0100000002000000030000000400000005000000060000000700000008000000090000000a0000000b0000000c000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!1 &300210030
 GameObject:
   m_ObjectHideFlags: 0
@@ -2195,7 +2324,7 @@ Transform:
   m_GameObject: {fileID: 300210030}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 21.07, y: 1.75, z: -3.75}
+  m_LocalPosition: {x: 21.07, y: 1.2, z: -3.75}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2220,8 +2349,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 3.9, y: 0.05, z: 1.1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 6.0612793, y: 0.05, z: 1.1648049}
+  m_Center: {x: -0.08476257, y: 0, z: -0.024248362}
 --- !u!114 &300210033
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2236,8 +2365,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 5
   _coveredNumbers: 0d0000000e0000000f000000100000001100000012000000130000001400000015000000160000001700000018000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!1 &300210040
 GameObject:
   m_ObjectHideFlags: 0
@@ -2265,7 +2395,7 @@ Transform:
   m_GameObject: {fileID: 300210040}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 27.09, y: 1.75, z: -3.75}
+  m_LocalPosition: {x: 27.09, y: 1.2, z: -3.75}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2290,8 +2420,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 3.9, y: 0.05, z: 1.1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 6.0363884, y: 0.05, z: 1.173387}
+  m_Center: {x: 0.0978508, y: 0, z: -0.02853942}
 --- !u!114 &300210043
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2306,8 +2436,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 5
   _coveredNumbers: 190000001a0000001b0000001c0000001d0000001e0000001f0000002000000021000000220000002300000024000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!1 &300210050
 GameObject:
   m_ObjectHideFlags: 0
@@ -2335,7 +2466,7 @@ Transform:
   m_GameObject: {fileID: 300210050}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 13.245, y: 1.75, z: -5.09}
+  m_LocalPosition: {x: 13.245, y: 1.2, z: -5.09}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2360,8 +2491,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 2.05, y: 0.05, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 2.9447432, y: 0.05, z: 1.215972}
+  m_Center: {x: 0.011570454, y: 0, z: -0.019283295}
 --- !u!114 &300210053
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2376,8 +2507,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 11
   _coveredNumbers: 0100000002000000030000000400000005000000060000000700000008000000090000000a0000000b0000000c0000000d0000000e0000000f000000100000001100000012000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!1 &300210060
 GameObject:
   m_ObjectHideFlags: 0
@@ -2405,7 +2537,7 @@ Transform:
   m_GameObject: {fileID: 300210060}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 16.369, y: 1.75, z: -5.1}
+  m_LocalPosition: {x: 16.369, y: 1.2, z: -5.1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2430,8 +2562,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 2.63, y: 0.05, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 2.9828587, y: 0.05, z: 1.2308817}
+  m_Center: {x: -0.02395916, y: 0, z: -0.0021781921}
 --- !u!114 &300210063
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2446,8 +2578,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 9
   _coveredNumbers: 020000000400000006000000080000000a0000000c0000000e00000010000000120000001400000016000000180000001a0000001c0000001e000000200000002200000024000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!1 &300210070
 GameObject:
   m_ObjectHideFlags: 0
@@ -2475,7 +2608,7 @@ Transform:
   m_GameObject: {fileID: 300210070}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 19.5, y: 1.75, z: -5.1}
+  m_LocalPosition: {x: 19.5, y: 1.2, z: -5.1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2500,8 +2633,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 2.62, y: 0.05, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 2.945633, y: 0.05, z: 1.2214313}
+  m_Center: {x: -0.04558754, y: 0, z: -0.010854483}
 --- !u!114 &300210073
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2516,8 +2649,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 7
   _coveredNumbers: 01000000030000000500000007000000090000000c0000000e0000001000000012000000130000001500000017000000190000001b0000001e000000200000002200000024000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!1 &300210080
 GameObject:
   m_ObjectHideFlags: 0
@@ -2545,7 +2679,7 @@ Transform:
   m_GameObject: {fileID: 300210080}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 22.59, y: 1.75, z: -5.1}
+  m_LocalPosition: {x: 22.59, y: 1.2, z: -5.1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2570,8 +2704,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 2.62, y: 0.05, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 2.9673424, y: 0.05, z: 1.2084055}
+  m_Center: {x: -0.052101135, y: 0, z: -0.0086836815}
 --- !u!114 &300210083
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2586,8 +2720,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 8
   _coveredNumbers: 020000000400000006000000080000000a0000000b0000000d0000000f000000110000001400000016000000180000001a0000001c0000001d0000001f0000002100000023000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!1 &300210090
 GameObject:
   m_ObjectHideFlags: 0
@@ -2615,7 +2750,7 @@ Transform:
   m_GameObject: {fileID: 300210090}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 25.71, y: 1.75, z: -5.1}
+  m_LocalPosition: {x: 25.71, y: 1.2, z: -5.1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2640,8 +2775,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 2.05, y: 0.05, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 2.9752922, y: 0.05, z: 1.2189627}
+  m_Center: {x: -0.070632935, y: 0, z: -0.007063389}
 --- !u!114 &300210093
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2656,8 +2791,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 10
   _coveredNumbers: 01000000030000000500000007000000090000000b0000000d0000000f00000011000000130000001500000017000000190000001b0000001d0000001f0000002100000023000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!1 &300210100
 GameObject:
   m_ObjectHideFlags: 0
@@ -2685,7 +2821,7 @@ Transform:
   m_GameObject: {fileID: 300210100}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 28.71, y: 1.75, z: -5.1}
+  m_LocalPosition: {x: 28.71, y: 1.2, z: -5.1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2710,8 +2846,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 2.59, y: 0.05, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 2.95537, y: 0.05, z: 1.2063255}
+  m_Center: {x: 0.015044212, y: 0, z: -0.012895107}
 --- !u!114 &300210103
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2726,8 +2862,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 12
   _coveredNumbers: 130000001400000015000000160000001700000018000000190000001a0000001b0000001c0000001d0000001e0000001f0000002000000021000000220000002300000024000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!1 &306146916
 GameObject:
   m_ObjectHideFlags: 0
@@ -2786,7 +2923,7 @@ Transform:
   m_GameObject: {fileID: 316047573}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 26.62, y: 1.75, z: 3.54}
+  m_LocalPosition: {x: 26.62, y: 1.2, z: 3.54}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2806,8 +2943,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 1e000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &316047576
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2827,8 +2965,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
+  m_Center: {x: -0.22, y: 0, z: 0.17}
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -2993,7 +3131,7 @@ Transform:
   m_GameObject: {fileID: 335122275}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 20.46, y: 1.75, z: 0.81}
+  m_LocalPosition: {x: 20.46, y: 1.2, z: 0.81}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3013,8 +3151,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 11000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &335122278
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3034,8 +3173,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
+  m_Center: {x: -0.2467761, y: 0, z: 0.16}
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -3190,7 +3329,7 @@ Transform:
   m_GameObject: {fileID: 490979083}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 29.75, y: 1.75, z: 3.54}
+  m_LocalPosition: {x: 29.75, y: 1.2, z: 3.54}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3210,8 +3349,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 24000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &490979086
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3231,8 +3371,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
+  m_Center: {x: -0.2467761, y: 0, z: 0.17}
 --- !u!1 &506769067
 GameObject:
   m_ObjectHideFlags: 0
@@ -3260,7 +3400,7 @@ Transform:
   m_GameObject: {fileID: 506769067}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 22.04, y: 1.75, z: 3.54}
+  m_LocalPosition: {x: 22.04, y: 1.2, z: 3.54}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3280,8 +3420,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 15000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &506769070
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3301,8 +3442,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
+  m_Center: {x: -0.2467761, y: 0, z: 0.17}
 --- !u!1 &507567603
 GameObject:
   m_ObjectHideFlags: 0
@@ -3330,7 +3471,7 @@ Transform:
   m_GameObject: {fileID: 507567603}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 23.59, y: 1.75, z: 0.81}
+  m_LocalPosition: {x: 23.59, y: 1.2, z: 0.81}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3350,8 +3491,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 17000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &507567606
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3371,8 +3513,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
+  m_Center: {x: -0.2467761, y: 0, z: 0.16}
 --- !u!1 &559856762
 GameObject:
   m_ObjectHideFlags: 0
@@ -3431,7 +3573,7 @@ Transform:
   m_GameObject: {fileID: 590428126}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 26.62, y: 1.75, z: 0.81}
+  m_LocalPosition: {x: 26.62, y: 1.2, z: 0.81}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3451,8 +3593,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 1d000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &590428129
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3472,8 +3615,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
+  m_Center: {x: -0.22, y: 0, z: 0.16}
 --- !u!1 &608868643
 GameObject:
   m_ObjectHideFlags: 0
@@ -3501,7 +3644,7 @@ Transform:
   m_GameObject: {fileID: 608868643}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 23.59, y: 1.75, z: 3.54}
+  m_LocalPosition: {x: 23.59, y: 1.2, z: 3.54}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3521,8 +3664,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 18000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &608868646
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3542,8 +3686,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
+  m_Center: {x: -0.2467761, y: 0, z: 0.17}
 --- !u!1 &628707872
 GameObject:
   m_ObjectHideFlags: 0
@@ -3571,7 +3715,7 @@ Transform:
   m_GameObject: {fileID: 628707872}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 31.1, y: 1.75, z: 3.75}
+  m_LocalPosition: {x: 31.1, y: 1.2, z: 3.75}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3591,8 +3735,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 6
   _coveredNumbers: 0300000006000000090000000c0000000f0000001200000015000000180000001b0000001e0000002100000024000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &628707875
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3612,8 +3757,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.1706028, y: 0.05, z: 2.311047}
-  m_Center: {x: -0.048758507, y: 0, z: -0.04875797}
+  m_Size: {x: 1.3808479, y: 0.05, z: 2.5869925}
+  m_Center: {x: -0.07065964, y: 0, z: -0.07}
 --- !u!1 &647019168
 GameObject:
   m_ObjectHideFlags: 0
@@ -3641,7 +3786,7 @@ Transform:
   m_GameObject: {fileID: 647019168}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 29.75, y: 1.75, z: 0.81}
+  m_LocalPosition: {x: 29.75, y: 1.2, z: 0.81}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3661,8 +3806,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 23000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &647019171
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3682,8 +3828,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
+  m_Center: {x: -0.2467761, y: 0, z: 0.16}
 --- !u!1 &651018963
 GameObject:
   m_ObjectHideFlags: 0
@@ -3711,7 +3857,7 @@ Transform:
   m_GameObject: {fileID: 651018963}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 14.29, y: 1.75, z: 3.54}
+  m_LocalPosition: {x: 14.29, y: 1.2, z: 3.54}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3731,8 +3877,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 06000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &651018966
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3752,8 +3899,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
+  m_Center: {x: -0.27, y: 0, z: 0.17}
 --- !u!1 &679689518
 GameObject:
   m_ObjectHideFlags: 0
@@ -3781,7 +3928,7 @@ Transform:
   m_GameObject: {fileID: 679689518}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 20.46, y: 1.75, z: 3.54}
+  m_LocalPosition: {x: 20.46, y: 1.2, z: 3.54}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3801,8 +3948,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 12000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &679689521
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3822,8 +3970,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
+  m_Center: {x: -0.2467761, y: 0, z: 0.17}
 --- !u!1 &699902275
 GameObject:
   m_ObjectHideFlags: 0
@@ -3913,7 +4061,7 @@ Transform:
   m_GameObject: {fileID: 749839931}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 12.74, y: 1.75, z: 3.54}
+  m_LocalPosition: {x: 12.74, y: 1.2, z: 3.54}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3933,8 +4081,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 03000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &749839934
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3954,8 +4103,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
+  m_Center: {x: -0.24, y: 0, z: 0.17}
 --- !u!1 &802642803
 GameObject:
   m_ObjectHideFlags: 0
@@ -4075,7 +4224,7 @@ Transform:
   m_GameObject: {fileID: 886218359}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 18.91, y: 1.75, z: 3.54}
+  m_LocalPosition: {x: 18.91, y: 1.2, z: 3.54}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4095,8 +4244,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 0f000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &886218362
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4116,8 +4266,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
+  m_Center: {x: -0.2467761, y: 0, z: 0.17}
 --- !u!1 &895315463
 GameObject:
   m_ObjectHideFlags: 0
@@ -4145,7 +4295,7 @@ Transform:
   m_GameObject: {fileID: 895315463}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 23.59, y: 1.75, z: -1.96}
+  m_LocalPosition: {x: 23.59, y: 1.2, z: -1.96}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4165,8 +4315,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 16000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &895315466
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4186,7 +4337,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
   m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
 --- !u!1 &930195513
 GameObject:
@@ -4215,7 +4366,7 @@ Transform:
   m_GameObject: {fileID: 930195513}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 25.07, y: 1.75, z: 3.54}
+  m_LocalPosition: {x: 25.07, y: 1.2, z: 3.54}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4235,8 +4386,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 1b000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &930195516
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4256,8 +4408,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
+  m_Center: {x: -0.22, y: 0, z: 0.17}
 --- !u!1 &940109870
 GameObject:
   m_ObjectHideFlags: 0
@@ -4285,7 +4437,7 @@ Transform:
   m_GameObject: {fileID: 940109870}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 31.1, y: 1.75, z: -1.73}
+  m_LocalPosition: {x: 31.1, y: 1.2, z: -1.73}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4305,8 +4457,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 6
   _coveredNumbers: 0100000004000000070000000a0000000d000000100000001300000016000000190000001c0000001f00000022000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &940109873
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4326,8 +4479,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.1706028, y: 0.05, z: 2.311047}
-  m_Center: {x: -0.048758507, y: 0, z: -0.04875797}
+  m_Size: {x: 1.3808479, y: 0.05, z: 2.5869925}
+  m_Center: {x: -0.07065964, y: 0, z: -0.011527181}
 --- !u!1 &987984992
 GameObject:
   m_ObjectHideFlags: 0
@@ -4355,7 +4508,7 @@ Transform:
   m_GameObject: {fileID: 987984992}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 14.29, y: 1.75, z: -1.96}
+  m_LocalPosition: {x: 14.29, y: 1.2, z: -1.96}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4375,8 +4528,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 04000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &987984995
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4396,8 +4550,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
+  m_Center: {x: -0.27, y: 0, z: 0.20629644}
 --- !u!1 &992091139
 GameObject:
   m_ObjectHideFlags: 0
@@ -4425,7 +4579,7 @@ Transform:
   m_GameObject: {fileID: 992091139}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 25.07, y: 1.75, z: -1.96}
+  m_LocalPosition: {x: 25.07, y: 1.2, z: -1.96}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4445,8 +4599,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 19000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &992091142
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4466,8 +4621,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
+  m_Center: {x: -0.22, y: 0, z: 0.20629644}
 --- !u!1 &1014571301
 GameObject:
   m_ObjectHideFlags: 0
@@ -4495,7 +4650,7 @@ Transform:
   m_GameObject: {fileID: 1014571301}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 17.42, y: 1.75, z: -1.96}
+  m_LocalPosition: {x: 17.42, y: 1.2, z: -1.96}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4515,8 +4670,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 0a000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &1014571304
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4536,8 +4692,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
+  m_Center: {x: -0.28, y: 0, z: 0.20629644}
 --- !u!1 &1031551484
 GameObject:
   m_ObjectHideFlags: 0
@@ -4565,7 +4721,7 @@ Transform:
   m_GameObject: {fileID: 1031551484}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 15.87, y: 1.75, z: 3.54}
+  m_LocalPosition: {x: 15.87, y: 1.2, z: 3.54}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4585,8 +4741,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 09000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &1031551487
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4606,8 +4763,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.423414, y: 0.05, z: 2.590606}
+  m_Center: {x: -0.289156, y: 0, z: 0.17}
 --- !u!1 &1075049236
 GameObject:
   m_ObjectHideFlags: 0
@@ -4635,7 +4792,7 @@ Transform:
   m_GameObject: {fileID: 1075049236}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 20.46, y: 1.75, z: -1.96}
+  m_LocalPosition: {x: 20.46, y: 1.2, z: -1.96}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4655,8 +4812,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 10000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &1075049239
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4676,7 +4834,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
   m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
 --- !u!1 &1174823034
 GameObject:
@@ -4705,7 +4863,7 @@ Transform:
   m_GameObject: {fileID: 1174823034}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 31.1, y: 1.75, z: 1.03}
+  m_LocalPosition: {x: 31.1, y: 1.2, z: 1.03}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4725,8 +4883,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 6
   _coveredNumbers: 0200000005000000080000000b0000000e0000001100000014000000170000001a0000001d0000002000000023000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &1174823037
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4746,8 +4905,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.1706028, y: 0.05, z: 2.311047}
-  m_Center: {x: -0.048758507, y: 0, z: -0.04875797}
+  m_Size: {x: 1.3808479, y: 0.05, z: 2.5869925}
+  m_Center: {x: -0.07065964, y: 0, z: -0.04}
 --- !u!1 &1209724321
 GameObject:
   m_ObjectHideFlags: 0
@@ -4775,7 +4934,7 @@ Transform:
   m_GameObject: {fileID: 1209724321}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 26.62, y: 1.75, z: -1.96}
+  m_LocalPosition: {x: 26.62, y: 1.2, z: -1.96}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4795,8 +4954,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 1c000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &1209724324
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4816,8 +4976,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
+  m_Center: {x: -0.22, y: 0, z: 0.20629644}
 --- !u!1 &1255105314
 GameObject:
   m_ObjectHideFlags: 0
@@ -4845,7 +5005,7 @@ Transform:
   m_GameObject: {fileID: 1255105314}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 28.2, y: 1.75, z: 3.54}
+  m_LocalPosition: {x: 28.2, y: 1.2, z: 3.54}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4865,8 +5025,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 21000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &1255105317
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4886,8 +5047,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
+  m_Center: {x: -0.2467761, y: 0, z: 0.17}
 --- !u!1 &1257363409
 GameObject:
   m_ObjectHideFlags: 0
@@ -4915,7 +5076,7 @@ Transform:
   m_GameObject: {fileID: 1257363409}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 17.42, y: 1.75, z: 3.54}
+  m_LocalPosition: {x: 17.42, y: 1.2, z: 3.54}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4935,8 +5096,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 0c000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &1257363412
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4956,8 +5118,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
+  m_Center: {x: -0.28, y: 0, z: 0.17}
 --- !u!1 &1257518743
 GameObject:
   m_ObjectHideFlags: 0
@@ -4985,7 +5147,7 @@ Transform:
   m_GameObject: {fileID: 1257518743}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 28.2, y: 1.75, z: 0.81}
+  m_LocalPosition: {x: 28.2, y: 1.2, z: 0.81}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5005,8 +5167,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 20000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &1257518746
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5026,8 +5189,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
+  m_Center: {x: -0.2467761, y: 0, z: 0.16}
 --- !u!1001 &1354319414
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5157,7 +5320,7 @@ Transform:
   m_GameObject: {fileID: 1405661574}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 15.87, y: 1.75, z: -1.96}
+  m_LocalPosition: {x: 15.87, y: 1.2, z: -1.96}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5177,8 +5340,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 07000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &1405661577
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5198,8 +5362,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.4234142, y: 0.05, z: 2.5687132}
+  m_Center: {x: -0.28915596, y: 0, z: 0.21724272}
 --- !u!1 &1523886795
 GameObject:
   m_ObjectHideFlags: 0
@@ -5227,7 +5391,7 @@ Transform:
   m_GameObject: {fileID: 1523886795}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 18.91, y: 1.75, z: -1.96}
+  m_LocalPosition: {x: 18.91, y: 1.2, z: -1.96}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5247,8 +5411,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 0d000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &1523886798
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5268,7 +5433,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
   m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
 --- !u!1 &1679962660
 GameObject:
@@ -5297,7 +5462,7 @@ Transform:
   m_GameObject: {fileID: 1679962660}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 12.74, y: 1.75, z: 0.81}
+  m_LocalPosition: {x: 12.74, y: 1.2, z: 0.81}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5317,8 +5482,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 02000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &1679962663
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5338,8 +5504,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
+  m_Center: {x: -0.24, y: 0, z: 0.16}
 --- !u!1 &1733501819
 GameObject:
   m_ObjectHideFlags: 0
@@ -5367,7 +5533,7 @@ Transform:
   m_GameObject: {fileID: 1733501819}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 12.74, y: 1.75, z: -1.96}
+  m_LocalPosition: {x: 12.74, y: 1.2, z: -1.96}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5387,8 +5553,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 01000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &1733501822
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5408,8 +5575,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.4069948, y: 0.05, z: 2.5906062}
+  m_Center: {x: -0.24, y: 0, z: 0.21840161}
 --- !u!1 &1771229395
 GameObject:
   m_ObjectHideFlags: 0
@@ -5437,7 +5604,7 @@ Transform:
   m_GameObject: {fileID: 1771229395}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 28.2, y: 1.75, z: -1.96}
+  m_LocalPosition: {x: 28.2, y: 1.2, z: -1.96}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5457,8 +5624,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 1f000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &1771229398
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5478,7 +5646,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
   m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
 --- !u!1 &1850195919
 GameObject:
@@ -5507,7 +5675,7 @@ Transform:
   m_GameObject: {fileID: 1850195919}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 22.04, y: 1.75, z: 0.81}
+  m_LocalPosition: {x: 22.04, y: 1.2, z: 0.81}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5527,8 +5695,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 14000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &1850195922
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5548,8 +5717,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
+  m_Center: {x: -0.2467761, y: 0, z: 0.16}
 --- !u!1 &1987074225
 GameObject:
   m_ObjectHideFlags: 0
@@ -5577,7 +5746,7 @@ Transform:
   m_GameObject: {fileID: 1987074225}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 22.04, y: 1.75, z: -1.96}
+  m_LocalPosition: {x: 22.04, y: 1.2, z: -1.96}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5597,8 +5766,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 13000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &1987074228
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5618,7 +5788,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
   m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
 --- !u!1 &2046246621
 GameObject:
@@ -5647,7 +5817,7 @@ Transform:
   m_GameObject: {fileID: 2046246621}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 15.87, y: 1.75, z: 0.81}
+  m_LocalPosition: {x: 15.87, y: 1.2, z: 0.81}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5667,8 +5837,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 08000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &2046246624
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5688,8 +5859,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.423414, y: 0.05, z: 2.590606}
+  m_Center: {x: -0.289156, y: 0, z: 0.16}
 --- !u!1 &2049092655
 GameObject:
   m_ObjectHideFlags: 0
@@ -5717,7 +5888,7 @@ Transform:
   m_GameObject: {fileID: 2049092655}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 14.29, y: 1.75, z: 0.81}
+  m_LocalPosition: {x: 14.29, y: 1.2, z: 0.81}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5737,8 +5908,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 05000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &2049092658
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5758,8 +5930,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
+  m_Center: {x: -0.27, y: 0, z: 0.16}
 --- !u!1 &2059015664
 GameObject:
   m_ObjectHideFlags: 0
@@ -5787,7 +5959,7 @@ Transform:
   m_GameObject: {fileID: 2059015664}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 17.42, y: 1.75, z: 0.81}
+  m_LocalPosition: {x: 17.42, y: 1.2, z: 0.81}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5807,8 +5979,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetSpot
   _betType: 0
   _coveredNumbers: 0b000000
-  _snapToCenter: 1
   _snapOffset: {x: 0, y: 0, z: 0}
+  _currentChipCount: 0
+  _chipThickness: 0.05
 --- !u!65 &2059015667
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5828,8 +6001,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.269805, y: 0.05, z: 2.275874}
-  m_Center: {x: -0.2467761, y: 0, z: 0.20629644}
+  m_Size: {x: 1.406995, y: 0.05, z: 2.590606}
+  m_Center: {x: -0.28, y: 0, z: 0.16}
 --- !u!1 &2095309864
 GameObject:
   m_ObjectHideFlags: 0

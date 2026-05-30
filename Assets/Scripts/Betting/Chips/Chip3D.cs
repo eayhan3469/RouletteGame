@@ -79,10 +79,16 @@ public sealed class Chip3D : MonoBehaviour
     private float _dropSnapDuration = 0.12f;
 
     private MaterialPropertyBlock _materialPropertyBlock;
+    private readonly RaycastHit[] _raycastHits = new RaycastHit[16];
     private Collider[] _colliders;
     private Coroutine _returnToOriginCoroutine;
     private Coroutine _settleCoroutine;
     private Plane _dragPlane;
+    private BetManager _betManager;
+    private BetSpotHighlighter _betSpotHighlighter;
+    private BetSpot _currentHoveredSpot;
+    private BetSpot _assignedBetSpot;
+    private BetSpot _dragOriginBetSpot;
     private Transform _dragStartParent;
     private Vector3 _dragStartLocalPosition;
     private Vector3 _dragStartLocalScale;
@@ -97,6 +103,8 @@ public sealed class Chip3D : MonoBehaviour
     {
         CacheReferencesIfNeeded();
         _colliders = GetComponentsInChildren<Collider>();
+        _betManager = FindFirstObjectByType<BetManager>();
+        _betSpotHighlighter = FindFirstObjectByType<BetSpotHighlighter>();
     }
 
     private void Update()
@@ -177,6 +185,17 @@ public sealed class Chip3D : MonoBehaviour
             SetCollidersEnabled(true);
         }
 
+        ClearHoveredSpot();
+
+        _dragOriginBetSpot = _assignedBetSpot;
+
+        if (_dragOriginBetSpot != null)
+        {
+            _dragOriginBetSpot.UnregisterChip(this);
+            _betManager?.UnregisterBet(this);
+            _assignedBetSpot = null;
+        }
+
         _dragStartParent = transform.parent;
         _dragStartLocalPosition = transform.localPosition;
         _dragStartLocalScale = transform.localScale;
@@ -229,6 +248,8 @@ public sealed class Chip3D : MonoBehaviour
             transform.localScale,
             _dragStartLocalScale * _dragScaleMultiplier,
             visualInterpolation);
+
+        UpdateHoveredSpot();
     }
 
     private void EndDrag()
@@ -241,12 +262,16 @@ public sealed class Chip3D : MonoBehaviour
         _isDragging = false;
         _activeDraggedChip = null;
 
-        if (TryPlaceOnBetSpot(out BetSpot betSpot, out Vector3 snapPosition))
+        if (TryGetBetSpotBelow(out BetSpot betSpot))
         {
+            ClearHoveredSpot();
+
+            Vector3 snapPosition = betSpot.GetNextDropPosition();
             _settleCoroutine = StartCoroutine(AnimateDropToBetSpotRoutine(betSpot, snapPosition));
             return;
         }
 
+        ClearHoveredSpot();
         _returnToOriginCoroutine = StartCoroutine(ReturnToOriginRoutine());
     }
 
@@ -340,35 +365,34 @@ public sealed class Chip3D : MonoBehaviour
         return sharedMaterials[materialIndex];
     }
 
-    private bool TryPlaceOnBetSpot(out BetSpot betSpot, out Vector3 snapPosition)
+    private bool TryGetBetSpotBelow(out BetSpot betSpot)
     {
         Vector3 rayOrigin = transform.position + (Vector3.up * _dropRayStartOffset);
         Ray dropRay = new Ray(rayOrigin, Vector3.down);
+        int hitCount = Physics.RaycastNonAlloc(dropRay, _raycastHits, _dropRayDistance);
+        float closestDistance = float.MaxValue;
+        BetSpot closestBetSpot = null;
 
-        RaycastHit[] hits = Physics.RaycastAll(dropRay, _dropRayDistance);
-        System.Array.Sort(hits, (left, right) => left.distance.CompareTo(right.distance));
-
-        for (int i = 0; i < hits.Length; i++)
+        for (int i = 0; i < hitCount; i++)
         {
-            RaycastHit hit = hits[i];
+            RaycastHit hit = _raycastHits[i];
 
             if (OwnsCollider(hit.collider))
             {
                 continue;
             }
 
-            betSpot = hit.collider.GetComponentInParent<BetSpot>();
+            BetSpot candidateBetSpot = hit.collider.GetComponentInParent<BetSpot>();
 
-            if (betSpot != null)
+            if (candidateBetSpot != null && hit.distance < closestDistance)
             {
-                snapPosition = betSpot.GetSnapPosition(hit, GetChipHeight());
-                return true;
+                closestDistance = hit.distance;
+                closestBetSpot = candidateBetSpot;
             }
         }
 
-        betSpot = null;
-        snapPosition = Vector3.zero;
-        return false;
+        betSpot = closestBetSpot;
+        return betSpot != null;
     }
 
     private bool OwnsCollider(Collider targetCollider)
@@ -450,6 +474,15 @@ public sealed class Chip3D : MonoBehaviour
         }
 
         SetCollidersEnabled(true);
+
+        if (_dragOriginBetSpot != null)
+        {
+            _dragOriginBetSpot.RegisterChip(this);
+            _betManager?.RegisterBet(this, _dragOriginBetSpot);
+            _assignedBetSpot = _dragOriginBetSpot;
+            _dragOriginBetSpot = null;
+        }
+
         _returnToOriginCoroutine = null;
     }
 
@@ -482,6 +515,10 @@ public sealed class Chip3D : MonoBehaviour
         transform.rotation = targetRotation;
         transform.localScale = _dragStartLocalScale;
         transform.SetParent(betSpot.transform, true);
+        betSpot.RegisterChip(this);
+        _betManager?.RegisterBet(this, betSpot);
+        _assignedBetSpot = betSpot;
+        _dragOriginBetSpot = null;
 
         SetCollidersEnabled(true);
         _settleCoroutine = null;
@@ -513,6 +550,40 @@ public sealed class Chip3D : MonoBehaviour
                 _colliders[i].enabled = isEnabled;
             }
         }
+    }
+
+    private void UpdateHoveredSpot()
+    {
+        if (!TryGetBetSpotBelow(out BetSpot hoveredSpot))
+        {
+            ClearHoveredSpot();
+            return;
+        }
+
+        if (hoveredSpot == _currentHoveredSpot)
+        {
+            return;
+        }
+
+        if (_currentHoveredSpot != null)
+        {
+            _betSpotHighlighter?.Hide();
+        }
+
+        _currentHoveredSpot = hoveredSpot;
+        _betSpotHighlighter?.ShowFor(_currentHoveredSpot);
+    }
+
+    private void ClearHoveredSpot()
+    {
+        if (_currentHoveredSpot == null)
+        {
+            _betSpotHighlighter?.Hide();
+            return;
+        }
+
+        _betSpotHighlighter?.Hide();
+        _currentHoveredSpot = null;
     }
 
     private float EaseOut(float t)
