@@ -8,9 +8,24 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public sealed class GameContext : MonoBehaviour
 {
+    [Header("UI")]
+    [SerializeField]
+    private GameObject _mainMenuPanel;
+
+    [SerializeField]
+    private MainMenuController _mainMenuController;
+
+    [Header("Bootstrap")]
+    [SerializeField]
+    [Min(0f)]
+    private float _defaultStartingBalance = 1000f;
+
     private StateMachine _stateMachine;
 
     public StateMachine StateMachine => _stateMachine;
+    public MainMenuController MainMenuController => _mainMenuController;
+    public float DefaultStartingBalance => _defaultStartingBalance;
+    public PlayerData PlayerData { get; private set; }
 
     private void Awake()
     {
@@ -25,5 +40,21 @@ public sealed class GameContext : MonoBehaviour
     private void Update()
     {
         _stateMachine.Tick();
+    }
+
+    public void SetMainMenuVisible(bool isVisible)
+    {
+        if (_mainMenuPanel == null)
+        {
+            Debug.LogWarning("GameContext is missing the Main Menu panel reference.");
+            return;
+        }
+
+        _mainMenuPanel.SetActive(isVisible);
+    }
+
+    public void SetPlayerData(PlayerData playerData)
+    {
+        PlayerData = playerData;
     }
 }
