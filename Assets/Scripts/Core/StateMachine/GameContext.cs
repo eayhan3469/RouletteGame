@@ -15,6 +15,15 @@ public sealed class GameContext : MonoBehaviour
     [SerializeField]
     private MainMenuController _mainMenuController;
 
+    [SerializeField]
+    private GameObject _bettingUiPanel;
+
+    [SerializeField]
+    private BettingUIController _bettingUIController;
+
+    [SerializeField]
+    private GameObject _deterministicSelectionRoot;
+
     [Header("Bootstrap")]
     [SerializeField]
     [Min(0f)]
@@ -24,12 +33,21 @@ public sealed class GameContext : MonoBehaviour
     [SerializeField]
     private ChipManager _chipManager;
 
+    [SerializeField]
+    private BetManager _betManager;
+
+    [SerializeField]
+    private WheelController _wheelController;
+
     private StateMachine _stateMachine;
 
     public StateMachine StateMachine => _stateMachine;
     public MainMenuController MainMenuController => _mainMenuController;
+    public BettingUIController BettingUIController => _bettingUIController;
     public float DefaultStartingBalance => _defaultStartingBalance;
     public ChipManager ChipManager => _chipManager;
+    public BetManager BetManager => _betManager;
+    public WheelController WheelController => _wheelController;
     public PlayerData PlayerData { get; private set; }
 
     private void Awake()
@@ -61,5 +79,26 @@ public sealed class GameContext : MonoBehaviour
     public void SetPlayerData(PlayerData playerData)
     {
         PlayerData = playerData;
+    }
+
+    public void SetBettingUiVisible(bool isVisible)
+    {
+        if (_bettingUiPanel == null)
+        {
+            Debug.LogWarning("GameContext is missing the Betting UI panel reference.");
+        }
+
+        if (_bettingUiPanel != null)
+        {
+            _bettingUiPanel.SetActive(isVisible);
+        }
+
+        if (_deterministicSelectionRoot == null)
+        {
+            Debug.LogWarning("GameContext is missing the Deterministic Selection root reference.");
+            return;
+        }
+
+        _deterministicSelectionRoot.SetActive(isVisible);
     }
 }

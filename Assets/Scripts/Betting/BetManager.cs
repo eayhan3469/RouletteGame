@@ -21,7 +21,10 @@ public sealed class BetManager : MonoBehaviour
     [SerializeField]
     private List<BetEntry> _activeBets = new List<BetEntry>();
 
+    public event Action<float> TotalBetChanged;
+
     public IReadOnlyList<BetEntry> ActiveBets => _activeBets;
+    public float TotalBet => CalculateTotalBet();
 
     public void RegisterBet(Chip3D chip, BetSpot spot)
     {
@@ -39,6 +42,8 @@ public sealed class BetManager : MonoBehaviour
             ChipValue = chip.Value,
             BetType = spot.Type
         });
+
+        NotifyTotalBetChanged();
     }
 
     public void UnregisterBet(Chip3D chip)
@@ -55,5 +60,24 @@ public sealed class BetManager : MonoBehaviour
                 _activeBets.RemoveAt(i);
             }
         }
+
+        NotifyTotalBetChanged();
+    }
+
+    private float CalculateTotalBet()
+    {
+        float totalBet = 0f;
+
+        for (int i = 0; i < _activeBets.Count; i++)
+        {
+            totalBet += _activeBets[i].ChipValue;
+        }
+
+        return totalBet;
+    }
+
+    private void NotifyTotalBetChanged()
+    {
+        TotalBetChanged?.Invoke(TotalBet);
     }
 }

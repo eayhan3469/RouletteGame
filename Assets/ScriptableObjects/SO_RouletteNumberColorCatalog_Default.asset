@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62a61f4f990d4026870d695b30e7ec9e, type: 3}
+  m_Name: SO_RouletteNumberColorCatalog_Default
+  m_EditorClassIdentifier: Assembly-CSharp::RouletteNumberColorCatalog
+  _redNumbers:
+  - 1
+  - 3
+  - 5
+  - 7
+  - 9
+  - 12
+  - 14
+  - 16
+  - 18
+  - 19
+  - 21
+  - 23
+  - 25
+  - 27
+  - 30
+  - 32
+  - 34
+  - 36
+  _blackNumbers:
+  - 2
+  - 4
+  - 6
+  - 8
+  - 10
+  - 11
+  - 13
+  - 15
+  - 17
+  - 20
+  - 22
+  - 24
+  - 26
+  - 28
+  - 29
+  - 31
+  - 33
+  - 35
