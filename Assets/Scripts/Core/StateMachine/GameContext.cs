@@ -20,11 +20,16 @@ public sealed class GameContext : MonoBehaviour
     [Min(0f)]
     private float _defaultStartingBalance = 1000f;
 
+    [Header("Gameplay")]
+    [SerializeField]
+    private ChipManager _chipManager;
+
     private StateMachine _stateMachine;
 
     public StateMachine StateMachine => _stateMachine;
     public MainMenuController MainMenuController => _mainMenuController;
     public float DefaultStartingBalance => _defaultStartingBalance;
+    public ChipManager ChipManager => _chipManager;
     public PlayerData PlayerData { get; private set; }
 
     private void Awake()

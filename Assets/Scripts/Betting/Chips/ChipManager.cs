@@ -14,7 +14,23 @@ public sealed class ChipManager : MonoBehaviour
         [Min(1)]
         public int ChipValue = 5;
 
+        [Range(0f, 1f)]
+        public float DistributionWeight = 0.2f;
+
         public Transform TraySlot = null;
+    }
+
+    [Serializable]
+    private sealed class ChipVisualDefinition
+    {
+        [Min(1)]
+        public int ChipValue = 5;
+
+        public Color BodyColor = Color.white;
+
+        public Color StripeColor = Color.black;
+
+        public Color TextColor = Color.black;
     }
 
     private readonly struct ChipStackInstruction
@@ -38,6 +54,10 @@ public sealed class ChipManager : MonoBehaviour
     [Header("Tray Setup")]
     [SerializeField]
     private List<ChipTraySlot> _chipTraySlots = new List<ChipTraySlot>();
+
+    [Header("Visual Setup")]
+    [SerializeField]
+    private List<ChipVisualDefinition> _chipVisualDefinitions = new List<ChipVisualDefinition>();
 
     [Header("Stacking")]
     [SerializeField]
@@ -75,13 +95,18 @@ public sealed class ChipManager : MonoBehaviour
     {
         List<ChipStackInstruction> instructions = new List<ChipStackInstruction>();
         List<ChipTraySlot> orderedSlots = GetOrderedTraySlots();
-        int remainingBalance = balance;
 
         if (orderedSlots.Count == 0)
         {
             Debug.LogWarning("Chip distribution failed because no chip tray slots are configured.");
             return instructions;
         }
+
+        Dictionary<int, ChipStackInstruction> instructionMap = CreateWeightedDistribution(balance, orderedSlots);
+        int distributedAmount = GetDistributedAmount(instructionMap);
+        int remainingBalance = balance - distributedAmount;
+
+        AddGreedyRemainder(remainingBalance, orderedSlots, instructionMap);
 
         for (int i = 0; i < orderedSlots.Count; i++)
         {
@@ -93,20 +118,12 @@ public sealed class ChipManager : MonoBehaviour
                 continue;
             }
 
-            int chipCount = remainingBalance / chipTraySlot.ChipValue;
-
-            if (chipCount <= 0)
+            if (!instructionMap.TryGetValue(chipTraySlot.ChipValue, out ChipStackInstruction instruction) || instruction.ChipCount <= 0)
             {
                 continue;
             }
 
-            instructions.Add(new ChipStackInstruction(chipTraySlot.ChipValue, chipCount, chipTraySlot.TraySlot));
-            remainingBalance -= chipCount * chipTraySlot.ChipValue;
-        }
-
-        if (remainingBalance > 0)
-        {
-            Debug.LogWarning($"Balance could not be represented exactly. Remaining amount: {remainingBalance}");
+            instructions.Add(instruction);
         }
 
         return instructions;
@@ -128,10 +145,16 @@ public sealed class ChipManager : MonoBehaviour
 
     private void SpawnStack(ChipStackInstruction instruction)
     {
+        ChipVisualDefinition chipVisual = GetChipVisualDefinition(instruction.ChipValue);
+
         for (int chipIndex = 0; chipIndex < instruction.ChipCount; chipIndex++)
         {
             Chip3D spawnedChip = Instantiate(_chipPrefab, instruction.TraySlot);
-            spawnedChip.Initialize(instruction.ChipValue);
+            spawnedChip.Initialize(
+                instruction.ChipValue,
+                chipVisual.BodyColor,
+                chipVisual.StripeColor,
+                chipVisual.TextColor);
 
             Transform chipTransform = spawnedChip.transform;
             chipTransform.localPosition = Vector3.up * (_chipThickness * chipIndex);
@@ -188,5 +211,127 @@ public sealed class ChipManager : MonoBehaviour
         });
 
         return orderedSlots;
+    }
+
+    private Dictionary<int, ChipStackInstruction> CreateWeightedDistribution(int balance, List<ChipTraySlot> orderedSlots)
+    {
+        Dictionary<int, ChipStackInstruction> instructionMap = new Dictionary<int, ChipStackInstruction>();
+        float totalWeight = 0f;
+
+        for (int i = 0; i < orderedSlots.Count; i++)
+        {
+            ChipTraySlot chipTraySlot = orderedSlots[i];
+
+            if (chipTraySlot != null && chipTraySlot.DistributionWeight > 0f)
+            {
+                totalWeight += chipTraySlot.DistributionWeight;
+            }
+        }
+
+        if (totalWeight <= 0f)
+        {
+            return instructionMap;
+        }
+
+        for (int i = 0; i < orderedSlots.Count; i++)
+        {
+            ChipTraySlot chipTraySlot = orderedSlots[i];
+
+            if (chipTraySlot == null || chipTraySlot.TraySlot == null || chipTraySlot.DistributionWeight <= 0f)
+            {
+                continue;
+            }
+
+            float share = chipTraySlot.DistributionWeight / totalWeight;
+            int targetAmount = Mathf.FloorToInt(balance * share);
+            int chipCount = targetAmount / chipTraySlot.ChipValue;
+
+            if (chipCount <= 0)
+            {
+                continue;
+            }
+
+            instructionMap[chipTraySlot.ChipValue] = new ChipStackInstruction(chipTraySlot.ChipValue, chipCount, chipTraySlot.TraySlot);
+        }
+
+        return instructionMap;
+    }
+
+    private int GetDistributedAmount(Dictionary<int, ChipStackInstruction> instructionMap)
+    {
+        int distributedAmount = 0;
+
+        foreach (ChipStackInstruction instruction in instructionMap.Values)
+        {
+            distributedAmount += instruction.ChipValue * instruction.ChipCount;
+        }
+
+        return distributedAmount;
+    }
+
+    private void AddGreedyRemainder(int remainingBalance, List<ChipTraySlot> orderedSlots, Dictionary<int, ChipStackInstruction> instructionMap)
+    {
+        int unresolvedBalance = remainingBalance;
+
+        for (int i = 0; i < orderedSlots.Count; i++)
+        {
+            ChipTraySlot chipTraySlot = orderedSlots[i];
+
+            if (chipTraySlot == null || chipTraySlot.TraySlot == null || chipTraySlot.ChipValue <= 0)
+            {
+                continue;
+            }
+
+            int additionalChipCount = unresolvedBalance / chipTraySlot.ChipValue;
+
+            if (additionalChipCount <= 0)
+            {
+                continue;
+            }
+
+            if (instructionMap.TryGetValue(chipTraySlot.ChipValue, out ChipStackInstruction existingInstruction))
+            {
+                instructionMap[chipTraySlot.ChipValue] = new ChipStackInstruction(
+                    chipTraySlot.ChipValue,
+                    existingInstruction.ChipCount + additionalChipCount,
+                    chipTraySlot.TraySlot);
+            }
+            else
+            {
+                instructionMap[chipTraySlot.ChipValue] = new ChipStackInstruction(
+                    chipTraySlot.ChipValue,
+                    additionalChipCount,
+                    chipTraySlot.TraySlot);
+            }
+
+            unresolvedBalance -= additionalChipCount * chipTraySlot.ChipValue;
+        }
+
+        if (unresolvedBalance > 0)
+        {
+            Debug.LogWarning($"Balance could not be represented exactly. Remaining amount: {unresolvedBalance}");
+        }
+    }
+
+    private ChipVisualDefinition GetChipVisualDefinition(int chipValue)
+    {
+        for (int i = 0; i < _chipVisualDefinitions.Count; i++)
+        {
+            ChipVisualDefinition chipVisualDefinition = _chipVisualDefinitions[i];
+
+            if (chipVisualDefinition != null && chipVisualDefinition.ChipValue == chipValue)
+            {
+                return chipVisualDefinition;
+            }
+        }
+
+        Debug.LogWarning($"No chip visual definition found for chip value {chipValue}. Using fallback colors.");
+        return new ChipVisualDefinition
+        {
+            ChipValue = chipValue,
+            BodyColor = Color.white,
+            StripeColor = Color.black,
+            TextColor = Color.black
+        };
     }
 }
