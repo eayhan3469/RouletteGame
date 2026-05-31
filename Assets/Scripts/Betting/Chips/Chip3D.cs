@@ -124,6 +124,11 @@ public sealed class Chip3D : MonoBehaviour
             TryBeginDrag(mouse.position.ReadValue());
         }
 
+        if (mouse.rightButton.wasPressedThisFrame)
+        {
+            TryReturnPlacedBet(mouse.position.ReadValue());
+        }
+
         if (_activeDraggedChip != this)
         {
             return;
@@ -220,6 +225,44 @@ public sealed class Chip3D : MonoBehaviour
         transform.SetParent(null, true);
     }
 
+    private void TryReturnPlacedBet(Vector2 screenPosition)
+    {
+        if (_isDragging || _assignedBetSpot == null || _activeDraggedChip != null)
+        {
+            return;
+        }
+
+        Camera mainCamera = Camera.main;
+
+        if (mainCamera == null)
+        {
+            return;
+        }
+
+        Ray selectionRay = mainCamera.ScreenPointToRay(screenPosition);
+
+        if (!Physics.Raycast(selectionRay, out RaycastHit hit, Mathf.Infinity) || !OwnsCollider(hit.collider))
+        {
+            return;
+        }
+
+        _betManager?.UnregisterBet(this);
+        _assignedBetSpot = null;
+        _dragOriginBetSpot = null;
+        ClearHoveredSpot();
+
+        _chipManager?.ReturnChipToTray(Value);
+
+        if (Application.isPlaying)
+        {
+            Destroy(gameObject);
+        }
+        else
+        {
+            DestroyImmediate(gameObject);
+        }
+    }
+
     private void DragToPointer(Vector2 screenPosition)
     {
         if (!_isDragging)
@@ -242,6 +285,16 @@ public sealed class Chip3D : MonoBehaviour
         }
 
         Vector3 targetPosition = dragRay.GetPoint(enterDistance);
+
+        if (TryGetBetSpotFromPointer(screenPosition, out BetSpot hoveredBetSpot, out _))
+        {
+            SetHoveredSpot(hoveredBetSpot);
+        }
+        else
+        {
+            ClearHoveredSpot();
+        }
+
         Vector3 movementDelta = targetPosition - _lastDragTargetPosition;
         _lastDragTargetPosition = targetPosition;
 
@@ -258,8 +311,6 @@ public sealed class Chip3D : MonoBehaviour
             transform.localScale,
             _dragStartLocalScale * _dragScaleMultiplier,
             visualInterpolation);
-
-        UpdateHoveredSpot();
     }
 
     private void EndDrag()
@@ -272,7 +323,14 @@ public sealed class Chip3D : MonoBehaviour
         _isDragging = false;
         _activeDraggedChip = null;
 
-        if (TryGetBetSpotBelow(out BetSpot betSpot))
+        BetSpot betSpot = _currentHoveredSpot;
+
+        if (betSpot == null && Mouse.current != null)
+        {
+            TryGetBetSpotFromPointer(Mouse.current.position.ReadValue(), out betSpot, out _);
+        }
+
+        if (betSpot != null)
         {
             ClearHoveredSpot();
 
@@ -403,6 +461,51 @@ public sealed class Chip3D : MonoBehaviour
 
         betSpot = closestBetSpot;
         return betSpot != null;
+    }
+
+    private bool TryGetBetSpotFromPointer(Vector2 screenPosition, out BetSpot betSpot, out Vector3 previewPosition)
+    {
+        betSpot = null;
+        previewPosition = default;
+
+        Camera mainCamera = Camera.main;
+
+        if (mainCamera == null)
+        {
+            return false;
+        }
+
+        Ray pointerRay = mainCamera.ScreenPointToRay(screenPosition);
+        int hitCount = Physics.RaycastNonAlloc(pointerRay, _raycastHits, Mathf.Infinity);
+        float closestDistance = float.MaxValue;
+        BetSpot closestBetSpot = null;
+
+        for (int i = 0; i < hitCount; i++)
+        {
+            RaycastHit hit = _raycastHits[i];
+
+            if (OwnsCollider(hit.collider))
+            {
+                continue;
+            }
+
+            BetSpot candidateBetSpot = hit.collider.GetComponentInParent<BetSpot>();
+
+            if (candidateBetSpot != null && hit.distance < closestDistance)
+            {
+                closestDistance = hit.distance;
+                closestBetSpot = candidateBetSpot;
+            }
+        }
+
+        if (closestBetSpot == null)
+        {
+            return false;
+        }
+
+        betSpot = closestBetSpot;
+        previewPosition = closestBetSpot.GetNextDropPosition() + (Vector3.up * _dragHoverOffset);
+        return true;
     }
 
     private bool OwnsCollider(Collider targetCollider)
@@ -569,9 +672,9 @@ public sealed class Chip3D : MonoBehaviour
         }
     }
 
-    private void UpdateHoveredSpot()
+    private void SetHoveredSpot(BetSpot hoveredSpot)
     {
-        if (!TryGetBetSpotBelow(out BetSpot hoveredSpot))
+        if (hoveredSpot == null)
         {
             ClearHoveredSpot();
             return;
@@ -582,11 +685,7 @@ public sealed class Chip3D : MonoBehaviour
             return;
         }
 
-        if (_currentHoveredSpot != null)
-        {
-            _betSpotHighlighter?.Hide();
-        }
-
+        _betSpotHighlighter?.Hide();
         _currentHoveredSpot = hoveredSpot;
         _betSpotHighlighter?.ShowFor(_currentHoveredSpot);
     }

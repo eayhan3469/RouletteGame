@@ -136,6 +136,26 @@ public sealed class ChipManager : MonoBehaviour
         RestackVisibleChips(trayStackState);
     }
 
+    public void ReturnChipToTray(int chipValue)
+    {
+        TrayStackState trayStackState = GetTrayStackStateForChipValue(chipValue);
+
+        if (trayStackState == null)
+        {
+            Debug.LogWarning($"ChipManager could not return chip value {chipValue} because no tray stack state was found.");
+            return;
+        }
+
+        if (trayStackState.VisibleChips.Count < trayStackState.MaxVisibleChipCount)
+        {
+            SpawnVisibleChip(trayStackState);
+            RestackVisibleChips(trayStackState);
+            return;
+        }
+
+        trayStackState.HiddenReserveCount++;
+    }
+
     private List<ChipStackInstruction> CalculateChipDistribution(int balance)
     {
         List<ChipStackInstruction> instructions = new List<ChipStackInstruction>();
@@ -393,6 +413,19 @@ public sealed class ChipManager : MonoBehaviour
             StripeColor = Color.black,
             TextColor = Color.black
         };
+    }
+
+    private TrayStackState GetTrayStackStateForChipValue(int chipValue)
+    {
+        foreach (TrayStackState trayStackState in _trayStackStates.Values)
+        {
+            if (trayStackState != null && trayStackState.ChipValue == chipValue)
+            {
+                return trayStackState;
+            }
+        }
+
+        return null;
     }
 
     private void SpawnVisibleChip(TrayStackState trayStackState)
