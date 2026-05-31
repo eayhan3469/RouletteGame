@@ -29,6 +29,9 @@ public sealed class GameContext : MonoBehaviour
     [FormerlySerializedAs("_resolutionUIController")]
     private ResultUIController _resultUIController;
 
+    [SerializeField]
+    private StatisticsUIController _statisticsUIController;
+
     [Header("Bootstrap")]
     [SerializeField]
     [Min(0f)]
@@ -50,6 +53,7 @@ public sealed class GameContext : MonoBehaviour
     public MainMenuController MainMenuController => _mainMenuController;
     public BettingUIController BettingUIController => _bettingUIController;
     public ResultUIController ResultUIController => _resultUIController;
+    public StatisticsUIController StatisticsUIController => _statisticsUIController;
     public float DefaultStartingBalance => _defaultStartingBalance;
     public ChipManager ChipManager => _chipManager;
     public BetManager BetManager => _betManager;

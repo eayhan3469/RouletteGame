@@ -33,8 +33,18 @@ public sealed class ResultState : GameStateBase
 
         if (Context.PlayerData != null)
         {
+            Context.PlayerData.TotalSpins++;
+            Context.PlayerData.TotalWagered += totalBet;
+            Context.PlayerData.TotalWon += amountWon;
+
+            if (amountWon > 0f)
+            {
+                Context.PlayerData.TotalWins++;
+            }
+
             Context.PlayerData.Balance += roundResult;
             SaveLoadManager.Save(Context.PlayerData);
+            Context.StatisticsUIController?.RefreshStats(Context.PlayerData);
         }
         else
         {

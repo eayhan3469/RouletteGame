@@ -44,6 +44,7 @@ public sealed class BettingState : GameStateBase
             Context.PlayerData != null && Context.PlayerData.IsEuropeanRoulette,
             Context.PlayerData != null ? Context.PlayerData.Balance : 0f,
             Context.BetManager != null ? Context.BetManager.TotalBet : InitialTotalBet);
+        Context.StatisticsUIController?.RefreshStats(Context.PlayerData);
         Context.BettingUIController.OnSpinTriggered -= HandleSpinTriggered;
         Context.BettingUIController.OnSpinTriggered += HandleSpinTriggered;
     }
