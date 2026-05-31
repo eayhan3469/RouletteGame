@@ -86,16 +86,19 @@ public sealed class Chip3D : MonoBehaviour
     private Plane _dragPlane;
     private BetManager _betManager;
     private BetSpotHighlighter _betSpotHighlighter;
+    private ChipManager _chipManager;
     private BetSpot _currentHoveredSpot;
     private BetSpot _assignedBetSpot;
     private BetSpot _dragOriginBetSpot;
     private Transform _dragStartParent;
+    private Transform _traySourceSlot;
     private Vector3 _dragStartLocalPosition;
     private Vector3 _dragStartLocalScale;
     private Quaternion _dragStartLocalRotation;
     private Quaternion _dragStartWorldRotation;
     private Vector3 _lastDragTargetPosition;
     private bool _isDragging;
+    private bool _isTrayChip;
 
     public int Value => _value;
 
@@ -148,6 +151,13 @@ public sealed class Chip3D : MonoBehaviour
     {
         _value = value;
         ApplyVisuals(value, bodyColor, stripeColor, textColor);
+    }
+
+    public void AssignTraySource(ChipManager chipManager, Transform traySourceSlot)
+    {
+        _chipManager = chipManager;
+        _traySourceSlot = traySourceSlot;
+        _isTrayChip = chipManager != null && traySourceSlot != null;
     }
 
     private void TryBeginDrag(Vector2 screenPosition)
@@ -519,6 +529,13 @@ public sealed class Chip3D : MonoBehaviour
         _betManager?.RegisterBet(this, betSpot);
         _assignedBetSpot = betSpot;
         _dragOriginBetSpot = null;
+
+        if (_isTrayChip && _traySourceSlot != null)
+        {
+            _chipManager?.ConsumeTrayChip(this, _traySourceSlot);
+            _traySourceSlot = null;
+            _isTrayChip = false;
+        }
 
         SetCollidersEnabled(true);
         _settleCoroutine = null;

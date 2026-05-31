@@ -17,6 +17,9 @@ public sealed class ChipManager : MonoBehaviour
         [Range(0f, 1f)]
         public float DistributionWeight = 0.2f;
 
+        [Min(1)]
+        public int MaxVisibleChipCount = 10;
+
         public Transform TraySlot = null;
     }
 
@@ -35,16 +38,28 @@ public sealed class ChipManager : MonoBehaviour
 
     private readonly struct ChipStackInstruction
     {
-        public ChipStackInstruction(int chipValue, int chipCount, Transform traySlot)
+        public ChipStackInstruction(int chipValue, int chipCount, int maxVisibleChipCount, Transform traySlot)
         {
             ChipValue = chipValue;
             ChipCount = chipCount;
+            MaxVisibleChipCount = maxVisibleChipCount;
             TraySlot = traySlot;
         }
 
         public int ChipValue { get; }
         public int ChipCount { get; }
+        public int MaxVisibleChipCount { get; }
         public Transform TraySlot { get; }
+    }
+
+    private sealed class TrayStackState
+    {
+        public int ChipValue;
+        public int HiddenReserveCount;
+        public int MaxVisibleChipCount;
+        public Transform TraySlot;
+        public ChipVisualDefinition VisualDefinition;
+        public readonly List<Chip3D> VisibleChips = new List<Chip3D>();
     }
 
     [Header("Prefab")]
@@ -68,6 +83,7 @@ public sealed class ChipManager : MonoBehaviour
     private bool _clearExistingStacksBeforeSpawn = true;
 
     private readonly List<Chip3D> _spawnedChips = new List<Chip3D>();
+    private readonly Dictionary<Transform, TrayStackState> _trayStackStates = new Dictionary<Transform, TrayStackState>();
 
     /// <summary>
     /// Breaks the balance into chip denominations starting from the highest value
@@ -89,6 +105,35 @@ public sealed class ChipManager : MonoBehaviour
 
         List<ChipStackInstruction> instructions = CalculateChipDistribution(balance);
         SpawnAndStackChips(instructions);
+    }
+
+    public void ClearTrayChips()
+    {
+        ClearSpawnedChips();
+    }
+
+    public void ConsumeTrayChip(Chip3D chip, Transform traySlot)
+    {
+        if (chip == null || traySlot == null)
+        {
+            return;
+        }
+
+        if (!_trayStackStates.TryGetValue(traySlot, out TrayStackState trayStackState))
+        {
+            return;
+        }
+
+        trayStackState.VisibleChips.Remove(chip);
+        _spawnedChips.Remove(chip);
+
+        if (trayStackState.HiddenReserveCount > 0 && trayStackState.VisibleChips.Count < trayStackState.MaxVisibleChipCount)
+        {
+            SpawnVisibleChip(trayStackState);
+            trayStackState.HiddenReserveCount--;
+        }
+
+        RestackVisibleChips(trayStackState);
     }
 
     private List<ChipStackInstruction> CalculateChipDistribution(int balance)
@@ -145,27 +190,36 @@ public sealed class ChipManager : MonoBehaviour
 
     private void SpawnStack(ChipStackInstruction instruction)
     {
-        ChipVisualDefinition chipVisual = GetChipVisualDefinition(instruction.ChipValue);
+        int visibleChipCount = Mathf.Min(instruction.ChipCount, instruction.MaxVisibleChipCount);
 
-        for (int chipIndex = 0; chipIndex < instruction.ChipCount; chipIndex++)
+        if (visibleChipCount <= 0)
         {
-            Chip3D spawnedChip = Instantiate(_chipPrefab, instruction.TraySlot);
-            spawnedChip.Initialize(
-                instruction.ChipValue,
-                chipVisual.BodyColor,
-                chipVisual.StripeColor,
-                chipVisual.TextColor);
-
-            Transform chipTransform = spawnedChip.transform;
-            chipTransform.localPosition = Vector3.up * (_chipThickness * chipIndex);
-            chipTransform.localRotation = Quaternion.identity;
-
-            _spawnedChips.Add(spawnedChip);
+            return;
         }
+
+        TrayStackState trayStackState = new TrayStackState
+        {
+            ChipValue = instruction.ChipValue,
+            HiddenReserveCount = Mathf.Max(0, instruction.ChipCount - visibleChipCount),
+            MaxVisibleChipCount = Mathf.Max(1, instruction.MaxVisibleChipCount),
+            TraySlot = instruction.TraySlot,
+            VisualDefinition = GetChipVisualDefinition(instruction.ChipValue)
+        };
+
+        _trayStackStates[instruction.TraySlot] = trayStackState;
+
+        for (int chipIndex = 0; chipIndex < visibleChipCount; chipIndex++)
+        {
+            SpawnVisibleChip(trayStackState);
+        }
+
+        RestackVisibleChips(trayStackState);
     }
 
     private void ClearSpawnedChips()
     {
+        _trayStackStates.Clear();
+
         for (int i = _spawnedChips.Count - 1; i >= 0; i--)
         {
             if (_spawnedChips[i] == null)
@@ -251,7 +305,11 @@ public sealed class ChipManager : MonoBehaviour
                 continue;
             }
 
-            instructionMap[chipTraySlot.ChipValue] = new ChipStackInstruction(chipTraySlot.ChipValue, chipCount, chipTraySlot.TraySlot);
+            instructionMap[chipTraySlot.ChipValue] = new ChipStackInstruction(
+                chipTraySlot.ChipValue,
+                chipCount,
+                chipTraySlot.MaxVisibleChipCount,
+                chipTraySlot.TraySlot);
         }
 
         return instructionMap;
@@ -294,6 +352,7 @@ public sealed class ChipManager : MonoBehaviour
                 instructionMap[chipTraySlot.ChipValue] = new ChipStackInstruction(
                     chipTraySlot.ChipValue,
                     existingInstruction.ChipCount + additionalChipCount,
+                    chipTraySlot.MaxVisibleChipCount,
                     chipTraySlot.TraySlot);
             }
             else
@@ -301,6 +360,7 @@ public sealed class ChipManager : MonoBehaviour
                 instructionMap[chipTraySlot.ChipValue] = new ChipStackInstruction(
                     chipTraySlot.ChipValue,
                     additionalChipCount,
+                    chipTraySlot.MaxVisibleChipCount,
                     chipTraySlot.TraySlot);
             }
 
@@ -333,5 +393,57 @@ public sealed class ChipManager : MonoBehaviour
             StripeColor = Color.black,
             TextColor = Color.black
         };
+    }
+
+    private void SpawnVisibleChip(TrayStackState trayStackState)
+    {
+        if (trayStackState == null || trayStackState.TraySlot == null)
+        {
+            return;
+        }
+
+        Chip3D spawnedChip = Instantiate(_chipPrefab, trayStackState.TraySlot);
+        spawnedChip.Initialize(
+            trayStackState.ChipValue,
+            trayStackState.VisualDefinition.BodyColor,
+            trayStackState.VisualDefinition.StripeColor,
+            trayStackState.VisualDefinition.TextColor);
+        spawnedChip.AssignTraySource(this, trayStackState.TraySlot);
+
+        _spawnedChips.Add(spawnedChip);
+        trayStackState.VisibleChips.Add(spawnedChip);
+    }
+
+    private void RestackVisibleChips(TrayStackState trayStackState)
+    {
+        if (trayStackState == null)
+        {
+            return;
+        }
+
+        for (int i = trayStackState.VisibleChips.Count - 1; i >= 0; i--)
+        {
+            if (trayStackState.VisibleChips[i] != null)
+            {
+                continue;
+            }
+
+            trayStackState.VisibleChips.RemoveAt(i);
+        }
+
+        for (int chipIndex = 0; chipIndex < trayStackState.VisibleChips.Count; chipIndex++)
+        {
+            Chip3D visibleChip = trayStackState.VisibleChips[chipIndex];
+
+            if (visibleChip == null)
+            {
+                continue;
+            }
+
+            Transform chipTransform = visibleChip.transform;
+            chipTransform.SetParent(trayStackState.TraySlot, false);
+            chipTransform.localPosition = Vector3.up * (_chipThickness * chipIndex);
+            chipTransform.localRotation = Quaternion.identity;
+        }
     }
 }

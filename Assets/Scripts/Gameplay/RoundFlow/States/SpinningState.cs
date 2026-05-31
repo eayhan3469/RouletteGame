@@ -26,7 +26,7 @@ public sealed class SpinningState : GameStateBase
         if (Context.WheelController == null)
         {
             UnityEngine.Debug.LogWarning("SpinningState could not spin because WheelController is missing.");
-            StateMachine.ChangeState(new ResolutionState(Context, StateMachine, _targetNumber));
+            StateMachine.ChangeState(new ResultState(Context, StateMachine, _targetNumber));
             return;
         }
 
@@ -50,6 +50,6 @@ public sealed class SpinningState : GameStateBase
             return;
         }
 
-        StateMachine.ChangeState(new ResolutionState(Context, StateMachine, _targetNumber));
+        StateMachine.ChangeState(new ResultState(Context, StateMachine, _targetNumber));
     }
 }

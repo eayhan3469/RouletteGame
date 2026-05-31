@@ -51,7 +51,7 @@ Assets/Scripts
 
 ## Why This Fits The Case
 
-- The case naturally maps to a round-based flow: `Initialize -> Betting -> Spinning -> Resolution -> Result`.
+- The case naturally maps to a round-based flow: `Initialize -> Betting -> Spinning -> Result -> Betting`.
 - Deterministic roulette needs a clean separation between round flow, betting rules, and wheel outcome selection.
 - Save/load is optional in the brief, but player statistics persistence is required, so `Persistence` and `Data/SaveData` are already split out.
 - Visual polish is important in the case, so `Presentation` stays separate from core gameplay logic.

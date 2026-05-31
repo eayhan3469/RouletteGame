@@ -13,10 +13,10 @@ public sealed class BettingState : GameStateBase
 
     public override void Enter()
     {
+        ResetTrayChipsFromBalance();
         LogLifecycle("Enter");
         SubscribeToBetManager();
         ShowBettingUi();
-        SpawnPlayerChips();
     }
 
     public override void Tick()
@@ -86,19 +86,21 @@ public sealed class BettingState : GameStateBase
         Context.BettingUIController.UpdateTotalBetText(totalBet);
     }
 
-    private void SpawnPlayerChips()
+    private void ResetTrayChipsFromBalance()
     {
         if (Context.PlayerData == null)
         {
-            UnityEngine.Debug.LogError("BettingState could not spawn chips because PlayerData is missing.");
+            UnityEngine.Debug.LogError("BettingState could not reset tray chips because PlayerData is missing.");
             return;
         }
 
         if (Context.ChipManager == null)
         {
-            UnityEngine.Debug.LogError("BettingState could not spawn chips because ChipManager is missing.");
+            UnityEngine.Debug.LogError("BettingState could not reset tray chips because ChipManager is missing.");
             return;
         }
+
+        Context.ChipManager.ClearTrayChips();
 
         if (!Context.PlayerData.IsEuropeanRoulette)
         {

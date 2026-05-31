@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 /// <summary>
 /// Scene-level composition root for the deterministic roulette flow.
@@ -24,6 +25,10 @@ public sealed class GameContext : MonoBehaviour
     [SerializeField]
     private GameObject _deterministicSelectionRoot;
 
+    [SerializeField]
+    [FormerlySerializedAs("_resolutionUIController")]
+    private ResultUIController _resultUIController;
+
     [Header("Bootstrap")]
     [SerializeField]
     [Min(0f)]
@@ -44,6 +49,7 @@ public sealed class GameContext : MonoBehaviour
     public StateMachine StateMachine => _stateMachine;
     public MainMenuController MainMenuController => _mainMenuController;
     public BettingUIController BettingUIController => _bettingUIController;
+    public ResultUIController ResultUIController => _resultUIController;
     public float DefaultStartingBalance => _defaultStartingBalance;
     public ChipManager ChipManager => _chipManager;
     public BetManager BetManager => _betManager;

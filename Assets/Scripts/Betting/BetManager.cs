@@ -4,26 +4,27 @@ using UnityEngine;
 
 /// <summary>
 /// Tracks the chips currently committed to betting spots.
-/// This is intentionally lightweight and only records placement data.
+/// It also resolves roulette payouts and clears the table between rounds.
 /// </summary>
 [DisallowMultipleComponent]
 public sealed class BetManager : MonoBehaviour
 {
     [Serializable]
-    public sealed class BetEntry
+    public sealed class PlacedBet
     {
         public Chip3D Chip;
         public BetSpot Spot;
-        public int ChipValue;
-        public BetType BetType;
     }
 
     [SerializeField]
-    private List<BetEntry> _activeBets = new List<BetEntry>();
+    private RoulettePayoutSO _roulettePayout;
+
+    [SerializeField]
+    private List<PlacedBet> _activeBets = new List<PlacedBet>();
 
     public event Action<float> TotalBetChanged;
 
-    public IReadOnlyList<BetEntry> ActiveBets => _activeBets;
+    public IReadOnlyList<PlacedBet> ActiveBets => _activeBets;
     public float TotalBet => CalculateTotalBet();
 
     public void RegisterBet(Chip3D chip, BetSpot spot)
@@ -35,12 +36,10 @@ public sealed class BetManager : MonoBehaviour
 
         UnregisterBet(chip);
 
-        _activeBets.Add(new BetEntry
+        _activeBets.Add(new PlacedBet
         {
             Chip = chip,
-            Spot = spot,
-            ChipValue = chip.Value,
-            BetType = spot.Type
+            Spot = spot
         });
 
         NotifyTotalBetChanged();
@@ -64,16 +63,95 @@ public sealed class BetManager : MonoBehaviour
         NotifyTotalBetChanged();
     }
 
+    public float CalculateWinnings(int winningNumber)
+    {
+        float totalPayout = 0f;
+
+        for (int i = 0; i < _activeBets.Count; i++)
+        {
+            PlacedBet placedBet = _activeBets[i];
+
+            if (placedBet == null || placedBet.Chip == null || placedBet.Spot == null)
+            {
+                continue;
+            }
+
+            int[] coveredNumbers = placedBet.Spot.CoveredNumbers;
+
+            if (coveredNumbers == null || Array.IndexOf(coveredNumbers, winningNumber) < 0)
+            {
+                continue;
+            }
+
+            float chipValue = placedBet.Chip.Value;
+            int multiplier = GetPayoutMultiplier(placedBet.Spot.Type);
+            totalPayout += chipValue + (chipValue * multiplier);
+        }
+
+        return totalPayout;
+    }
+
+    public void ClearTableBets()
+    {
+        for (int i = _activeBets.Count - 1; i >= 0; i--)
+        {
+            PlacedBet placedBet = _activeBets[i];
+
+            if (placedBet == null)
+            {
+                continue;
+            }
+
+            if (placedBet.Spot != null && placedBet.Chip != null)
+            {
+                placedBet.Spot.UnregisterChip(placedBet.Chip);
+            }
+
+            if (placedBet.Chip == null)
+            {
+                continue;
+            }
+
+            if (Application.isPlaying)
+            {
+                Destroy(placedBet.Chip.gameObject);
+            }
+            else
+            {
+                DestroyImmediate(placedBet.Chip.gameObject);
+            }
+        }
+
+        _activeBets.Clear();
+        NotifyTotalBetChanged();
+    }
+
     private float CalculateTotalBet()
     {
         float totalBet = 0f;
 
         for (int i = 0; i < _activeBets.Count; i++)
         {
-            totalBet += _activeBets[i].ChipValue;
+            if (_activeBets[i] == null || _activeBets[i].Chip == null)
+            {
+                continue;
+            }
+
+            totalBet += _activeBets[i].Chip.Value;
         }
 
         return totalBet;
+    }
+
+    private int GetPayoutMultiplier(BetType betType)
+    {
+        if (_roulettePayout != null)
+        {
+            return _roulettePayout.GetMultiplier(betType);
+        }
+
+        Debug.LogWarning($"BetManager is missing a RoulettePayoutSO reference. Using default multiplier for {betType}.");
+        return RoulettePayoutSO.GetDefaultMultiplier(betType);
     }
 
     private void NotifyTotalBetChanged()
