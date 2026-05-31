@@ -27,6 +27,11 @@ public sealed class InitializeState : GameStateBase
 
         Context.SetPlayerData(playerData);
 
+        if (TryResumeSavedRound())
+        {
+            return;
+        }
+
         if (Context.MainMenuController != null)
         {
             Context.MainMenuController.SetSelectedRouletteType(Context.PlayerData.IsEuropeanRoulette);
@@ -73,5 +78,21 @@ public sealed class InitializeState : GameStateBase
         float startingBalance = Context != null ? Context.DefaultStartingBalance : FallbackStartingBalance;
         playerData.Balance = startingBalance;
         return playerData;
+    }
+
+    private bool TryResumeSavedRound()
+    {
+        if (Context.PlayerData == null)
+        {
+            return false;
+        }
+
+        if (Context.PlayerData.SavedBets != null && Context.PlayerData.SavedBets.Count > 0)
+        {
+            StateMachine.ChangeState(new BettingState(Context, StateMachine));
+            return true;
+        }
+
+        return false;
     }
 }

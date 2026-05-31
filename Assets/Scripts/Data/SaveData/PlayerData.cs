@@ -1,15 +1,35 @@
+using System.Collections.Generic;
+
 /// <summary>
-/// Serializable player save model containing long-lived progression and table settings.
+/// Serializable player save model containing long-lived progression, table settings,
+/// and resumable round state.
 /// </summary>
 [System.Serializable]
 public sealed class PlayerData
 {
+    [System.Serializable]
+    public sealed class SavedBetData
+    {
+        public string BetSpotId;
+        public int ChipValue;
+    }
+
+    public enum RoundPhase
+    {
+        None,
+        Betting,
+        Spinning
+    }
+
     public int TotalSpins;
     public int TotalWins;
     public float TotalWagered;
     public float TotalWon;
     public float Balance;
     public bool IsEuropeanRoulette = true;
+    public RoundPhase SavedRoundPhase;
+    public int PendingSpinTargetNumber = -1;
+    public List<SavedBetData> SavedBets = new List<SavedBetData>();
 
     public PlayerData()
     {
@@ -19,5 +39,8 @@ public sealed class PlayerData
         TotalWon = 0f;
         Balance = 0f;
         IsEuropeanRoulette = true;
+        SavedRoundPhase = RoundPhase.None;
+        PendingSpinTargetNumber = -1;
+        SavedBets = new List<SavedBetData>();
     }
 }

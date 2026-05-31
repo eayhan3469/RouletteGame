@@ -27,6 +27,10 @@ public sealed class BetSpot : MonoBehaviour
     [Min(0.001f)]
     private float _chipThickness = 0.05f;
 
+    [Header("Persistence")]
+    [SerializeField]
+    private string _saveId = string.Empty;
+
     [Header("Highlight")]
     [SerializeField]
     private SpriteRenderer _numberHighlightRenderer;
@@ -37,6 +41,7 @@ public sealed class BetSpot : MonoBehaviour
     public BetType Type => _betType;
     public int[] CoveredNumbers => _coveredNumbers;
     public int CurrentChipCount => _currentChipCount;
+    public string SaveId => string.IsNullOrWhiteSpace(_saveId) ? GetHierarchyPath() : _saveId;
     public bool IsStraightNumberSpot => _betType == BetType.Straight && _coveredNumbers != null && _coveredNumbers.Length == 1;
     public int StraightNumber => IsStraightNumberSpot ? _coveredNumbers[0] : -1;
     public bool HasNumberHighlightRenderer => _numberHighlightRenderer != null;
@@ -103,6 +108,20 @@ public sealed class BetSpot : MonoBehaviour
         _numberHighlightRenderer.color = color;
         _numberHighlightRenderer.sortingOrder = sortingOrder;
         _numberHighlightRenderer.enabled = isVisible;
+    }
+
+    private string GetHierarchyPath()
+    {
+        string path = name;
+        Transform current = transform.parent;
+
+        while (current != null)
+        {
+            path = $"{current.name}/{path}";
+            current = current.parent;
+        }
+
+        return path;
     }
 }
 

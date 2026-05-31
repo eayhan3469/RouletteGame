@@ -14,6 +14,7 @@ public sealed class BettingState : GameStateBase
     public override void Enter()
     {
         ResetTrayChipsFromBalance();
+        RestoreSavedBetsIfNeeded();
         LogLifecycle("Enter");
         SubscribeToBetManager();
         ShowBettingUi();
@@ -110,6 +111,26 @@ public sealed class BettingState : GameStateBase
 
         int chipBalance = UnityEngine.Mathf.Max(0, UnityEngine.Mathf.FloorToInt(Context.PlayerData.Balance));
         Context.ChipManager.DistributeBalanceToChips(chipBalance);
+    }
+
+    private void RestoreSavedBetsIfNeeded()
+    {
+        if (Context.PlayerData == null || Context.BetManager == null || Context.ChipManager == null)
+        {
+            return;
+        }
+
+        if (Context.BetManager.ActiveBets.Count > 0)
+        {
+            return;
+        }
+
+        if (Context.PlayerData.SavedBets == null || Context.PlayerData.SavedBets.Count == 0)
+        {
+            return;
+        }
+
+        Context.BetManager.RestoreSavedBets(Context.PlayerData.SavedBets, Context.ChipManager);
     }
 
     private void HandleSpinTriggered(int targetNumber)

@@ -42,7 +42,8 @@ public sealed class ResultState : GameStateBase
                 Context.PlayerData.TotalWins++;
             }
 
-            Context.PlayerData.Balance += roundResult;
+            Context.PlayerData.Balance += amountWon;
+            Context.ClearPendingSpinBets();
             SaveLoadManager.Save(Context.PlayerData);
             Context.StatisticsUIController?.RefreshStats(Context.PlayerData);
         }

@@ -22,10 +22,17 @@ public sealed class BetManager : MonoBehaviour
     [SerializeField]
     private List<PlacedBet> _activeBets = new List<PlacedBet>();
 
+    private readonly Dictionary<string, BetSpot> _betSpotLookup = new Dictionary<string, BetSpot>();
+
     public event Action<float> TotalBetChanged;
 
     public IReadOnlyList<PlacedBet> ActiveBets => _activeBets;
     public float TotalBet => CalculateTotalBet();
+
+    private void Awake()
+    {
+        CacheBetSpots();
+    }
 
     public void RegisterBet(Chip3D chip, BetSpot spot)
     {
@@ -96,6 +103,71 @@ public sealed class BetManager : MonoBehaviour
         return totalPayout;
     }
 
+    public List<PlayerData.SavedBetData> CreateSavedBetsSnapshot()
+    {
+        List<PlayerData.SavedBetData> snapshot = new List<PlayerData.SavedBetData>();
+
+        for (int i = 0; i < _activeBets.Count; i++)
+        {
+            PlacedBet placedBet = _activeBets[i];
+
+            if (placedBet == null || placedBet.Chip == null || placedBet.Spot == null)
+            {
+                continue;
+            }
+
+            snapshot.Add(new PlayerData.SavedBetData
+            {
+                BetSpotId = placedBet.Spot.SaveId,
+                ChipValue = placedBet.Chip.Value
+            });
+        }
+
+        return snapshot;
+    }
+
+    public void RestoreSavedBets(IReadOnlyList<PlayerData.SavedBetData> savedBets, ChipManager chipManager)
+    {
+        if (savedBets == null || savedBets.Count == 0)
+        {
+            return;
+        }
+
+        if (chipManager == null)
+        {
+            Debug.LogError("BetManager could not restore saved bets because ChipManager is missing.");
+            return;
+        }
+
+        CacheBetSpots();
+        ClearTableBets();
+
+        for (int i = 0; i < savedBets.Count; i++)
+        {
+            PlayerData.SavedBetData savedBet = savedBets[i];
+
+            if (savedBet == null || string.IsNullOrWhiteSpace(savedBet.BetSpotId))
+            {
+                continue;
+            }
+
+            if (!_betSpotLookup.TryGetValue(savedBet.BetSpotId, out BetSpot betSpot) || betSpot == null)
+            {
+                Debug.LogWarning($"BetManager could not restore bet because no BetSpot matched save id '{savedBet.BetSpotId}'.");
+                continue;
+            }
+
+            Chip3D spawnedChip = chipManager.SpawnTableChip(savedBet.ChipValue, betSpot);
+
+            if (spawnedChip == null)
+            {
+                continue;
+            }
+
+            RegisterBet(spawnedChip, betSpot);
+        }
+    }
+
     public void ClearTableBets()
     {
         for (int i = _activeBets.Count - 1; i >= 0; i--)
@@ -162,5 +234,30 @@ public sealed class BetManager : MonoBehaviour
     private void NotifyTotalBetChanged()
     {
         TotalBetChanged?.Invoke(TotalBet);
+    }
+
+    private void CacheBetSpots()
+    {
+        _betSpotLookup.Clear();
+
+        BetSpot[] betSpots = FindObjectsByType<BetSpot>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+
+        for (int i = 0; i < betSpots.Length; i++)
+        {
+            BetSpot betSpot = betSpots[i];
+
+            if (betSpot == null || string.IsNullOrWhiteSpace(betSpot.SaveId))
+            {
+                continue;
+            }
+
+            if (_betSpotLookup.ContainsKey(betSpot.SaveId))
+            {
+                Debug.LogWarning($"Duplicate BetSpot save id detected: {betSpot.SaveId}");
+                continue;
+            }
+
+            _betSpotLookup.Add(betSpot.SaveId, betSpot);
+        }
     }
 }

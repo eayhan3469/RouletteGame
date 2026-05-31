@@ -87,6 +87,7 @@ public sealed class Chip3D : MonoBehaviour
     private BetManager _betManager;
     private BetSpotHighlighter _betSpotHighlighter;
     private ChipManager _chipManager;
+    private GameContext _gameContext;
     private BetSpot _currentHoveredSpot;
     private BetSpot _assignedBetSpot;
     private BetSpot _dragOriginBetSpot;
@@ -108,6 +109,7 @@ public sealed class Chip3D : MonoBehaviour
         _colliders = GetComponentsInChildren<Collider>();
         _betManager = FindFirstObjectByType<BetManager>();
         _betSpotHighlighter = FindFirstObjectByType<BetSpotHighlighter>();
+        _gameContext = FindFirstObjectByType<GameContext>();
     }
 
     private void Update()
@@ -163,6 +165,14 @@ public sealed class Chip3D : MonoBehaviour
         _chipManager = chipManager;
         _traySourceSlot = traySourceSlot;
         _isTrayChip = chipManager != null && traySourceSlot != null;
+    }
+
+    public void MarkPlacedOnBetSpot(BetSpot betSpot)
+    {
+        _assignedBetSpot = betSpot;
+        _dragOriginBetSpot = null;
+        _traySourceSlot = null;
+        _isTrayChip = false;
     }
 
     private void TryBeginDrag(Vector2 screenPosition)
@@ -250,6 +260,12 @@ public sealed class Chip3D : MonoBehaviour
         _assignedBetSpot = null;
         _dragOriginBetSpot = null;
         ClearHoveredSpot();
+
+        if (_gameContext != null && _gameContext.PlayerData != null)
+        {
+            _gameContext.PlayerData.Balance += Value;
+            _gameContext.BettingUIController?.UpdateBalanceText(_gameContext.PlayerData.Balance);
+        }
 
         _chipManager?.ReturnChipToTray(Value);
 
@@ -630,14 +646,18 @@ public sealed class Chip3D : MonoBehaviour
         transform.SetParent(betSpot.transform, true);
         betSpot.RegisterChip(this);
         _betManager?.RegisterBet(this, betSpot);
-        _assignedBetSpot = betSpot;
-        _dragOriginBetSpot = null;
+        bool wasTrayChip = _isTrayChip && _traySourceSlot != null;
+        MarkPlacedOnBetSpot(betSpot);
 
-        if (_isTrayChip && _traySourceSlot != null)
+        if (wasTrayChip)
         {
-            _chipManager?.ConsumeTrayChip(this, _traySourceSlot);
-            _traySourceSlot = null;
-            _isTrayChip = false;
+            _chipManager?.ConsumeTrayChip(this, _dragStartParent);
+
+            if (_gameContext != null && _gameContext.PlayerData != null)
+            {
+                _gameContext.PlayerData.Balance -= Value;
+                _gameContext.BettingUIController?.UpdateBalanceText(_gameContext.PlayerData.Balance);
+            }
         }
 
         SetCollidersEnabled(true);

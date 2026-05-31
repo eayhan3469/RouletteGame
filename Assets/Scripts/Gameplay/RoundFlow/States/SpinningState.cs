@@ -22,6 +22,7 @@ public sealed class SpinningState : GameStateBase
         LogLifecycle($"Enter - Target Number: {_targetNumber}");
 
         _isActive = true;
+        Context.SavePendingSpinBets();
 
         if (Context.WheelController == null)
         {

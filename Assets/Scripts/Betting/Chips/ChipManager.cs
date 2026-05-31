@@ -156,6 +156,36 @@ public sealed class ChipManager : MonoBehaviour
         trayStackState.HiddenReserveCount++;
     }
 
+    public Chip3D SpawnTableChip(int chipValue, BetSpot betSpot)
+    {
+        if (_chipPrefab == null)
+        {
+            Debug.LogError("ChipManager could not spawn a table chip because no chip prefab is assigned.");
+            return null;
+        }
+
+        if (betSpot == null)
+        {
+            Debug.LogError("ChipManager could not spawn a table chip because the target BetSpot is missing.");
+            return null;
+        }
+
+        ChipVisualDefinition visualDefinition = GetChipVisualDefinition(chipValue);
+        Chip3D spawnedChip = Instantiate(_chipPrefab, betSpot.transform);
+        spawnedChip.Initialize(
+            chipValue,
+            visualDefinition.BodyColor,
+            visualDefinition.StripeColor,
+            visualDefinition.TextColor);
+        spawnedChip.AssignTraySource(this, null);
+        spawnedChip.transform.position = betSpot.GetNextDropPosition();
+        spawnedChip.transform.rotation = Quaternion.identity;
+        spawnedChip.transform.localScale = Vector3.one;
+        spawnedChip.MarkPlacedOnBetSpot(betSpot);
+        betSpot.RegisterChip(spawnedChip);
+        return spawnedChip;
+    }
+
     private List<ChipStackInstruction> CalculateChipDistribution(int balance)
     {
         List<ChipStackInstruction> instructions = new List<ChipStackInstruction>();
