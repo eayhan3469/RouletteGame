@@ -7,6 +7,7 @@ using UnityEngine;
 /// </summary>
 public sealed class ResultState : GameStateBase
 {
+    private const float ResultRevealDelay = 1f;
     private const float ResultDisplayDuration = 3f;
 
     private readonly int _winningNumber;
@@ -40,16 +41,7 @@ public sealed class ResultState : GameStateBase
             Debug.LogError("ResultState could not persist winnings because PlayerData is missing.");
         }
 
-        if (Context.ResultUIController != null)
-        {
-            Context.ResultUIController.ShowResult(roundResult);
-        }
-        else
-        {
-            Debug.LogWarning("ResultState is missing the ResultUIController reference.");
-        }
-
-        _returnToBettingCoroutine = Context.StartCoroutine(ReturnToBettingAfterDelay());
+        _returnToBettingCoroutine = Context.StartCoroutine(ReturnToBettingAfterDelay(roundResult));
     }
 
     public override void Tick()
@@ -69,8 +61,19 @@ public sealed class ResultState : GameStateBase
         LogLifecycle("Exit");
     }
 
-    private IEnumerator ReturnToBettingAfterDelay()
+    private IEnumerator ReturnToBettingAfterDelay(float roundResult)
     {
+        yield return new WaitForSeconds(ResultRevealDelay);
+
+        if (Context.ResultUIController != null)
+        {
+            Context.ResultUIController.ShowResult(roundResult, _winningNumber);
+        }
+        else
+        {
+            Debug.LogWarning("ResultState is missing the ResultUIController reference.");
+        }
+
         yield return new WaitForSeconds(ResultDisplayDuration);
 
         _returnToBettingCoroutine = null;

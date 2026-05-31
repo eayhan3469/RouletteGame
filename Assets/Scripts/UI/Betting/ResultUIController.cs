@@ -6,20 +6,23 @@ using UnityEngine;
 /// </summary>
 public sealed class ResultUIController : MonoBehaviour
 {
-    private static readonly Color PositiveResultColor = new Color(0.77254903f, 0.5294118f, 0.078431375f, 1f);
-    private static readonly Color NegativeResultColor = new Color(0.6901961f, 0.21960784f, 0.1882353f, 1f);
-    private static readonly Color NeutralResultColor = new Color(0.23137255f, 0.2901961f, 0.30980393f, 1f);
+    [Header("Result Colors")]
+    [SerializeField] private Color PositiveResultColor;
+    [SerializeField] private Color NegativeResultColor;
+    [SerializeField] private Color NeutralResultColor;
+    [Header("Pocket Colors")]
+    [SerializeField] private Color RedPocketColor;
+    [SerializeField] private Color BlackPocketColor;
+    [SerializeField] private Color GreenPocketColor;
 
-    [SerializeField]
-    private GameObject _root;
+    [Header("UI References")]
+    [SerializeField] private GameObject _root;
+    [SerializeField] private RouletteNumberColorCatalog _rouletteNumberColorCatalog;
+    [SerializeField] private TextMeshProUGUI _headlineText;
+    [SerializeField] private TextMeshProUGUI _winningNumberText;
+    [SerializeField] private TextMeshProUGUI _resultText;
 
-    [SerializeField]
-    private TextMeshProUGUI _headlineText;
-
-    [SerializeField]
-    private TextMeshProUGUI _resultText;
-
-    public void ShowResult(float amountWon)
+    public void ShowResult(float amountWon, int winningNumber)
     {
         SetVisible(true);
 
@@ -37,6 +40,8 @@ public sealed class ResultUIController : MonoBehaviour
                     ? "Round Lost"
                     : "Round Complete";
         }
+
+        UpdateWinningNumberText(winningNumber);
 
         if (amountWon > 0f)
         {
@@ -65,5 +70,45 @@ public sealed class ResultUIController : MonoBehaviour
     {
         GameObject target = _root != null ? _root : gameObject;
         target.SetActive(isVisible);
+    }
+
+    private void UpdateWinningNumberText(int winningNumber)
+    {
+        if (_winningNumberText == null)
+        {
+            return;
+        }
+
+        _winningNumberText.text = $"Winning Number: {FormatWinningNumber(winningNumber)}";
+        _winningNumberText.color = GetWinningNumberColor(winningNumber);
+    }
+
+    private Color GetWinningNumberColor(int winningNumber)
+    {
+        if (_rouletteNumberColorCatalog == null ||
+            !_rouletteNumberColorCatalog.TryGetPocketColor(winningNumber, out RoulettePocketColor pocketColor))
+        {
+            return NeutralResultColor;
+        }
+
+        switch (pocketColor)
+        {
+            case RoulettePocketColor.Red:
+                return RedPocketColor;
+
+            case RoulettePocketColor.Black:
+                return BlackPocketColor;
+
+            case RoulettePocketColor.Green:
+                return GreenPocketColor;
+
+            default:
+                return NeutralResultColor;
+        }
+    }
+
+    private string FormatWinningNumber(int winningNumber)
+    {
+        return winningNumber == 37 ? "00" : winningNumber.ToString();
     }
 }
