@@ -27,16 +27,24 @@ public sealed class BetSpot : MonoBehaviour
     [Min(0.001f)]
     private float _chipThickness = 0.05f;
 
+    [Header("Highlight")]
+    [SerializeField]
+    private SpriteRenderer _numberHighlightRenderer;
+
     private Collider _cachedCollider;
     private readonly List<Chip3D> _placedChips = new List<Chip3D>();
 
     public BetType Type => _betType;
     public int[] CoveredNumbers => _coveredNumbers;
     public int CurrentChipCount => _currentChipCount;
+    public bool IsStraightNumberSpot => _betType == BetType.Straight && _coveredNumbers != null && _coveredNumbers.Length == 1;
+    public int StraightNumber => IsStraightNumberSpot ? _coveredNumbers[0] : -1;
+    public bool HasNumberHighlightRenderer => _numberHighlightRenderer != null;
 
     private void Awake()
     {
         _cachedCollider = GetComponent<Collider>();
+        SetNumberHighlightVisible(false, Color.white, 0);
     }
 
     /// <summary>
@@ -83,6 +91,18 @@ public sealed class BetSpot : MonoBehaviour
 
         _placedChips.Remove(chip);
         _currentChipCount = _placedChips.Count;
+    }
+
+    public void SetNumberHighlightVisible(bool isVisible, Color color, int sortingOrder)
+    {
+        if (_numberHighlightRenderer == null)
+        {
+            return;
+        }
+
+        _numberHighlightRenderer.color = color;
+        _numberHighlightRenderer.sortingOrder = sortingOrder;
+        _numberHighlightRenderer.enabled = isVisible;
     }
 }
 

@@ -37,7 +37,7 @@ public sealed class ResultState : GameStateBase
             Context.PlayerData.TotalWagered += totalBet;
             Context.PlayerData.TotalWon += amountWon;
 
-            if (amountWon > 0f)
+            if (roundResult > 0f)
             {
                 Context.PlayerData.TotalWins++;
             }

@@ -56,6 +56,11 @@ public sealed class BetManager : MonoBehaviour
         {
             if (_activeBets[i].Chip == chip)
             {
+                if (_activeBets[i].Spot != null)
+                {
+                    _activeBets[i].Spot.UnregisterChip(chip);
+                }
+
                 _activeBets.RemoveAt(i);
             }
         }
