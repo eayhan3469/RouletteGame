@@ -14,18 +14,24 @@ public sealed class MainMenuController : MonoBehaviour
     private Button _playButton;
 
     [SerializeField]
+    private Button _clearSaveButton;
+
+    [SerializeField]
     private Toggle _europeanRouletteToggle;
 
     public event Action<bool> PlayButtonClicked;
+    public event Action ClearSaveButtonClicked;
 
     private void Awake()
     {
         RegisterPlayButtonListener();
+        RegisterClearSaveButtonListener();
     }
 
     private void OnDestroy()
     {
         UnregisterPlayButtonListener();
+        UnregisterClearSaveButtonListener();
     }
 
     /// <summary>
@@ -42,10 +48,26 @@ public sealed class MainMenuController : MonoBehaviour
         _europeanRouletteToggle.isOn = isEuropeanRoulette;
     }
 
+    public void SetClearSaveButtonInteractable(bool isInteractable)
+    {
+        if (_clearSaveButton == null)
+        {
+            Debug.LogWarning("MainMenuController is missing the Clear Save button reference.");
+            return;
+        }
+
+        _clearSaveButton.interactable = isInteractable;
+    }
+
     private void HandlePlayButtonClicked()
     {
         bool isEuropeanRoulette = _europeanRouletteToggle == null || _europeanRouletteToggle.isOn;
         PlayButtonClicked?.Invoke(isEuropeanRoulette);
+    }
+
+    private void HandleClearSaveButtonClicked()
+    {
+        ClearSaveButtonClicked?.Invoke();
     }
 
     private void RegisterPlayButtonListener()
@@ -61,11 +83,32 @@ public sealed class MainMenuController : MonoBehaviour
         }
     }
 
+    private void RegisterClearSaveButtonListener()
+    {
+        if (_clearSaveButton != null)
+        {
+            _clearSaveButton.onClick.RemoveListener(HandleClearSaveButtonClicked);
+            _clearSaveButton.onClick.AddListener(HandleClearSaveButtonClicked);
+        }
+        else
+        {
+            Debug.LogWarning("MainMenuController is missing a Clear Save button reference.");
+        }
+    }
+
     private void UnregisterPlayButtonListener()
     {
         if (_playButton != null)
         {
             _playButton.onClick.RemoveListener(HandlePlayButtonClicked);
+        }
+    }
+
+    private void UnregisterClearSaveButtonListener()
+    {
+        if (_clearSaveButton != null)
+        {
+            _clearSaveButton.onClick.RemoveListener(HandleClearSaveButtonClicked);
         }
     }
 }

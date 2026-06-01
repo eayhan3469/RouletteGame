@@ -66,4 +66,25 @@ public static class SaveLoadManager
             return new PlayerData();
         }
     }
+
+    public static bool DeleteSave()
+    {
+        if (!File.Exists(SavePath))
+        {
+            Debug.Log("No save file found to delete.");
+            return false;
+        }
+
+        try
+        {
+            File.Delete(SavePath);
+            Debug.Log($"Player save deleted from: {SavePath}");
+            return true;
+        }
+        catch (Exception exception)
+        {
+            Debug.LogError($"Failed to delete player data. Exception: {exception.Message}");
+            return false;
+        }
+    }
 }

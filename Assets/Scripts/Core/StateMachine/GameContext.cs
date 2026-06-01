@@ -112,6 +112,23 @@ public sealed class GameContext : MonoBehaviour
         _deterministicSelectionRoot.SetActive(isVisible);
     }
 
+    public void SaveCurrentBettingState()
+    {
+        if (PlayerData == null)
+        {
+            return;
+        }
+
+        PlayerData.SavedRoundPhase = _betManager != null && _betManager.ActiveBets.Count > 0
+            ? PlayerData.RoundPhase.Betting
+            : PlayerData.RoundPhase.None;
+        PlayerData.PendingSpinTargetNumber = -1;
+        PlayerData.SavedBets = _betManager != null
+            ? _betManager.CreateSavedBetsSnapshot()
+            : new System.Collections.Generic.List<PlayerData.SavedBetData>();
+        SaveLoadManager.Save(PlayerData);
+    }
+
     public void SavePendingSpinBets()
     {
         if (PlayerData == null)
@@ -119,7 +136,7 @@ public sealed class GameContext : MonoBehaviour
             return;
         }
 
-        PlayerData.SavedRoundPhase = PlayerData.RoundPhase.None;
+        PlayerData.SavedRoundPhase = PlayerData.RoundPhase.Spinning;
         PlayerData.PendingSpinTargetNumber = -1;
         PlayerData.SavedBets = _betManager != null
             ? _betManager.CreateSavedBetsSnapshot()

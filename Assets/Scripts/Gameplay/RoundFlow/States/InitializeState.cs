@@ -27,15 +27,12 @@ public sealed class InitializeState : GameStateBase
 
         Context.SetPlayerData(playerData);
 
-        if (TryResumeSavedRound())
-        {
-            return;
-        }
-
         if (Context.MainMenuController != null)
         {
             Context.MainMenuController.SetSelectedRouletteType(Context.PlayerData.IsEuropeanRoulette);
             Context.MainMenuController.PlayButtonClicked += HandlePlayButtonClicked;
+            Context.MainMenuController.ClearSaveButtonClicked += HandleClearSaveButtonClicked;
+            Context.MainMenuController.SetClearSaveButtonInteractable(hasExistingSave);
         }
         else
         {
@@ -54,6 +51,7 @@ public sealed class InitializeState : GameStateBase
         if (Context.MainMenuController != null)
         {
             Context.MainMenuController.PlayButtonClicked -= HandlePlayButtonClicked;
+            Context.MainMenuController.ClearSaveButtonClicked -= HandleClearSaveButtonClicked;
         }
 
         Context.SetMainMenuVisible(false);
@@ -72,27 +70,27 @@ public sealed class InitializeState : GameStateBase
         StateMachine.ChangeState(new BettingState(Context, StateMachine));
     }
 
+    private void HandleClearSaveButtonClicked()
+    {
+        if (!SaveLoadManager.DeleteSave())
+        {
+            return;
+        }
+
+        Context.SetPlayerData(CreateDefaultPlayerData());
+
+        if (Context.MainMenuController != null)
+        {
+            Context.MainMenuController.SetSelectedRouletteType(Context.PlayerData.IsEuropeanRoulette);
+            Context.MainMenuController.SetClearSaveButtonInteractable(false);
+        }
+    }
+
     private PlayerData CreateDefaultPlayerData()
     {
         PlayerData playerData = new PlayerData();
         float startingBalance = Context != null ? Context.DefaultStartingBalance : FallbackStartingBalance;
         playerData.Balance = startingBalance;
         return playerData;
-    }
-
-    private bool TryResumeSavedRound()
-    {
-        if (Context.PlayerData == null)
-        {
-            return false;
-        }
-
-        if (Context.PlayerData.SavedBets != null && Context.PlayerData.SavedBets.Count > 0)
-        {
-            StateMachine.ChangeState(new BettingState(Context, StateMachine));
-            return true;
-        }
-
-        return false;
     }
 }

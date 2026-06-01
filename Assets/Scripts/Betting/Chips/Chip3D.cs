@@ -267,6 +267,8 @@ public sealed class Chip3D : MonoBehaviour
             _gameContext.BettingUIController?.UpdateBalanceText(_gameContext.PlayerData.Balance);
         }
 
+        _gameContext?.SaveCurrentBettingState();
+
         _chipManager?.ReturnChipToTray(Value);
 
         if (Application.isPlaying)
@@ -610,6 +612,7 @@ public sealed class Chip3D : MonoBehaviour
             _betManager?.RegisterBet(this, _dragOriginBetSpot);
             _assignedBetSpot = _dragOriginBetSpot;
             _dragOriginBetSpot = null;
+            _gameContext?.SaveCurrentBettingState();
         }
 
         _returnToOriginCoroutine = null;
@@ -659,6 +662,8 @@ public sealed class Chip3D : MonoBehaviour
                 _gameContext.BettingUIController?.UpdateBalanceText(_gameContext.PlayerData.Balance);
             }
         }
+
+        _gameContext?.SaveCurrentBettingState();
 
         SetCollidersEnabled(true);
         _settleCoroutine = null;

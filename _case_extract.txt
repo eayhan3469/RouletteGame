@@ -1,0 +1,119 @@
+--- PAGE 1 ---
+Unity Game Developer Case 
+Study - Deterministic Roulette
+Objective
+Create a 3D single-player Unity prototype of a Deterministic Roulette game, 
+focusing on immersive roulette wheel animations, robust data tracking, and 
+standard Roulette rules. The game should track gameplay and winning statistics. 
+“Deterministicˮ indicates that the player can manually choose which number will 
+appear on the next spin, enabling testing or controlled gameplay scenarios.
+Features
+1. Roulette Wheel & Animations
+Deterministic Outcome Selection The player can select the next winning 
+number through a UI element before spinning. If not selected, the game can 
+produce a random number.
+Wheel Spinning Animation A 3D roulette wheel that spins smoothly, showing 
+a realistic ball drop animation.
+Visual Cues Clear indication of winning numbers and their colors 
+(red/black/green).
+2. Player Statistics
+Win / Loss Tracking Track the number of spins played, total wins, and overall 
+profit/loss.
+Historical Record Display these statistics in the UI or on a dedicated 
+screen/menu.
+3. Full Roulette Rules & Mechanics
+Betting & Chip System Required component where players can select 
+different chip denominations and place bets on the roulette table.
+Unit y Game De v eloper Case Stud y  Det er ministic R oulet t e
+1
+--- PAGE 2 ---
+Bet Types Support standard Inside Bets Straight, Split, Street, Corner, Six 
+Line) and Outside Bets Red/Black, Even/Odd, High/Low, Dozens, Columns).
+🌟  BONUS  Zero and Double-Zero Optional) Option to switch between 
+European (single zero) or American (double zero) roulette.
+Spin & Payout Calculation Once the wheel stops, winning bets are calculated, 
+and chips are awarded or deducted.
+Multi-Round Flow After each spin, the player can place new bets while 
+retaining ongoing win/loss counters.
+4. 🌟  Bonus: Save & Load Game State
+🌟  Auto-Save Optional) Automatically saves the current game state (active 
+bets, total chips, last spin outcome, etc.) when the game is closed.
+🌟  Resume Optional) On reopening, the game continues from the exact state 
+where it was left off.
+🌟  Persistent Data Optional) Player statistics, chosen roulette type 
+European/American), and any other preferences remain intact across 
+sessions.
+5. Creatives
+3D Environment & Assets Carefully source or create 3D models for the 
+roulette table, chips, and the surroundings, ensuring consistency and proper 
+licensing.
+In-Game UI Provide a polished interface for placing bets, viewing winnings, 
+selecting the deterministic outcome, and tracking statistics.
+Sound Effects Incorporate audio for spinning the wheel, ball drop, winning 
+bets, and losing bets.
+Particles & Special Effects Add celebratory effects on winning spins (e.g., 
+confetti, chip sparkle).
+Polish & VFX Use animations and special effects (e.g., highlights on winning 
+numbers) to enrich player engagement.
+Unit y Game De v eloper Case Stud y  Det er ministic R oulet t e
+2
+--- PAGE 3 ---
+Add a README File
+Include a comprehensive README.md in the Git repository, detailing:
+Controls and Gameplay Instructions Clearly describe how to place bets, 
+select deterministic outcomes, and any special keybindings or UI interactions.
+Any Known Issues or Future Improvements Highlight areas that need 
+refinement or additional features you plan to implement.
+A Link or Embedded Video Provide a demo showing the prototype in action.
+Design Patterns: Explain which design patterns (e.g., Singleton, Factory, 
+Observer, MVC, Command, Strategy) you utilized and how you applied them in 
+your projectʼs structure and design.
+Evaluation Criteria
+ Gameplay & Mechanics
+Realistic wheel spinning and accurate roulette logic
+Deterministic outcome functionality (user-selectable next result)
+Smooth user experience and intuitive bet placement
+ Persistence & Statistics
+Proper tracking and display of win/loss statistics
+Optional) Ability to save and load the game state
+ Code Quality
+Adherence to OOP and SOLID principles with a modular, maintainable 
+architecture
+Reusability and clarity of key components (spinning logic, bet 
+management, saving system)
+ Creativity & Polish
+Visually appealing animations, sounds, and effects
+Unit y Game De v eloper Case Stud y  Det er ministic R oulet t e
+3
+--- PAGE 4 ---
+Well-chosen or self-created 3D assets for a cohesive theme
+ Version Control
+Consistent Git usage with clear, meaningful commit messages
+Structured branching and merges
+ Documentation & Comments
+Clear, well-organized code comments, especially around complex logic or 
+critical components
+Thorough project documentation (e.g., in the README describing 
+architecture, setup, and usage
+Proper use of inline and external documentation to facilitate maintenance 
+and onboarding of new contributors
+Technologies
+Engine Unity 6000.0.X
+Programming Language C#
+Version Control Git
+Project Deadline & Delivery
+Please send the repository Bitbucket , Github, Gitlab etc.)  link to 
+hr@joker.games . If the repository is private, please share it with 
+ersin.demir@joker.games
+The project must be completed in 7 days.
+Additional Notes
+Avoid using third-party plugins, scripts you have used in other projects, SDKs, 
+etc., during coding. Do not use DoTween.). Only Unity UI frameworks are 
+allowed
+Unit y Game De v eloper Case Stud y  Det er ministic R oulet t e
+4
+--- PAGE 5 ---
+All assets like textures, audio and 3D models can be sourced from the internet 
+Unity Asset Store, google etc.)
+Unit y Game De v eloper Case Stud y  Det er ministic R oulet t e
+5
