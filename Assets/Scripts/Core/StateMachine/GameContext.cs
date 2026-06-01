@@ -32,6 +32,10 @@ public sealed class GameContext : MonoBehaviour
     [SerializeField]
     private StatisticsUIController _statisticsUIController;
 
+    [Header("Presentation")]
+    [SerializeField]
+    private RouletteAudioFeedbackController _audioFeedbackController;
+
     [Header("Bootstrap")]
     [SerializeField]
     [Min(0f)]
@@ -54,6 +58,7 @@ public sealed class GameContext : MonoBehaviour
     public BettingUIController BettingUIController => _bettingUIController;
     public ResultUIController ResultUIController => _resultUIController;
     public StatisticsUIController StatisticsUIController => _statisticsUIController;
+    public RouletteAudioFeedbackController AudioFeedbackController => _audioFeedbackController;
     public float DefaultStartingBalance => _defaultStartingBalance;
     public ChipManager ChipManager => _chipManager;
     public BetManager BetManager => _betManager;
@@ -62,6 +67,7 @@ public sealed class GameContext : MonoBehaviour
 
     private void Awake()
     {
+        EnsureAudioFeedbackController();
         _stateMachine = new StateMachine();
     }
 
@@ -89,6 +95,21 @@ public sealed class GameContext : MonoBehaviour
     public void SetPlayerData(PlayerData playerData)
     {
         PlayerData = playerData;
+    }
+
+    private void EnsureAudioFeedbackController()
+    {
+        if (_audioFeedbackController != null)
+        {
+            return;
+        }
+
+        _audioFeedbackController = GetComponent<RouletteAudioFeedbackController>();
+
+        if (_audioFeedbackController == null)
+        {
+            _audioFeedbackController = gameObject.AddComponent<RouletteAudioFeedbackController>();
+        }
     }
 
     public void SetBettingUiVisible(bool isVisible)

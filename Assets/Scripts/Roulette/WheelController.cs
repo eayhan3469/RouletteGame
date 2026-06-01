@@ -104,8 +104,16 @@ public sealed class WheelController : MonoBehaviour
     private Renderer[] _ballRenderers = Array.Empty<Renderer>();
     private Coroutine _spinRoutine;
     private bool _isSpinning;
+    private float _currentWheelDegreesPerSecond;
+    private float _currentBallDegreesPerSecond;
 
     public bool IsSpinning => _isSpinning;
+    public float CurrentWheelDegreesPerSecond => _currentWheelDegreesPerSecond;
+    public float MaxWheelDegreesPerSecond => Mathf.Max(_wheelStartupDegreesPerSecond, _wheelDropDegreesPerSecond, _wheelStopDegreesPerSecond);
+    public float CurrentBallDegreesPerSecond => _currentBallDegreesPerSecond;
+    public float MaxBallDegreesPerSecond => Mathf.Max(_ballRimStartDegreesPerSecond, _ballRimEndDegreesPerSecond);
+    public event Action BallReleased;
+    public event Action BallPocketLanded;
 
     private void Awake()
     {
@@ -179,6 +187,7 @@ public sealed class WheelController : MonoBehaviour
 
         PrepareBallForSpin();
         SetBallVisible(false);
+        _currentBallDegreesPerSecond = 0f;
 
         Vector3 orbitCenterWorldPosition = _ballRimPivot.position;
 
@@ -193,11 +202,13 @@ public sealed class WheelController : MonoBehaviour
                 _wheelStartupDegreesPerSecond,
                 EaseOutCubic(normalizedTime));
 
+            _currentWheelDegreesPerSecond = wheelSpeed;
             RotateWheelClockwise(wheelSpeed * Time.deltaTime);
             yield return null;
         }
 
         SetBallVisible(true);
+        BallReleased?.Invoke();
 
         Vector3 visibleBallOffset = _ballTransform.position - orbitCenterWorldPosition;
         float rimRadius = new Vector2(visibleBallOffset.x, visibleBallOffset.z).magnitude;
@@ -255,6 +266,8 @@ public sealed class WheelController : MonoBehaviour
                 ballSpeedBlend) * angularSpeedScale;
             float wheelSpeed = GetWheelSpeedAtElapsedTime(elapsedTime);
 
+            _currentWheelDegreesPerSecond = wheelSpeed;
+            _currentBallDegreesPerSecond = visibleCounterSpeed;
             RotateWheelClockwise(wheelSpeed * deltaTime);
             currentBallWorldAngle -= visibleCounterSpeed * deltaTime;
 
@@ -287,6 +300,9 @@ public sealed class WheelController : MonoBehaviour
 
         _ballTransform.position = targetSlot.transform.position;
         _ballTransform.rotation = Quaternion.identity;
+        _currentWheelDegreesPerSecond = 0f;
+        _currentBallDegreesPerSecond = 0f;
+        BallPocketLanded?.Invoke();
 
         _isSpinning = false;
         _spinRoutine = null;

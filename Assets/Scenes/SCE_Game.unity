@@ -587,6 +587,7 @@ GameObject:
   m_Component:
   - component: {fileID: 100100011}
   - component: {fileID: 100100012}
+  - component: {fileID: 100100013}
   m_Layer: 0
   m_Name: GameContext
   m_TagString: Untagged
@@ -628,10 +629,48 @@ MonoBehaviour:
   _deterministicSelectionRoot: {fileID: 100300050}
   _resultUIController: {fileID: 510030014}
   _statisticsUIController: {fileID: 800100004}
+  _audioFeedbackController: {fileID: 100100013}
   _defaultStartingBalance: 1000
   _chipManager: {fileID: 100200042}
   _betManager: {fileID: 100100022}
   _wheelController: {fileID: 100200022}
+--- !u!114 &100100013
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100100010}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d8c6a87a8b04a249d4abf4b0d5141b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _masterVolume: 0.85
+  _wheelLoopVolume: 0.28
+  _wheelLoopMinPitch: 0.7
+  _wheelLoopMaxPitch: 1.2
+  _wheelLoopMinVolumeFactor: 0.35
+  _ballLoopVolume: 0.24
+  _ballLoopMinPitch: 0.72
+  _ballLoopMaxPitch: 1.18
+  _ballLoopMinVolumeFactor: 0.3
+  _ballReleaseVolume: 0.42
+  _ballPocketVolume: 0.58
+  _chipPickupVolume: 0.22
+  _chipDropVolume: 0.32
+  _winResultVolume: 0.5
+  _loseResultVolume: 0.38
+  _neutralResultVolume: 0.25
+  _wheelLoopClip: {fileID: 8300000, guid: 7fe1b41bf12f3504c8738fcde2e3ef5c, type: 3}
+  _ballLoopClip: {fileID: 8300000, guid: d8bbd6e63db9b584a8338d42d247dab3, type: 3}
+  _ballReleaseClip: {fileID: 8300000, guid: a467fc6b3b84f8b40b6d661a10384751, type: 3}
+  _ballPocketClip: {fileID: 8300000, guid: a75be9102be2e6349a3c3554dd4e9ab6, type: 3}
+  _chipPickupClip: {fileID: 8300000, guid: 7f745d318347c4f4d92b1a2ef7610902, type: 3}
+  _chipDropClip: {fileID: 8300000, guid: fcfdd2ca1f162994e952bb8a620b6db4, type: 3}
+  _winResultClip: {fileID: 0}
+  _loseResultClip: {fileID: 0}
+  _neutralResultClip: {fileID: 0}
 --- !u!1 &100100020
 GameObject:
   m_ObjectHideFlags: 0

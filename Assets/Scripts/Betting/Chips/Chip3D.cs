@@ -196,6 +196,8 @@ public sealed class Chip3D : MonoBehaviour
             return;
         }
 
+        _gameContext?.AudioFeedbackController?.PlayChipPickup();
+
         if (_returnToOriginCoroutine != null)
         {
             StopCoroutine(_returnToOriginCoroutine);
@@ -268,6 +270,7 @@ public sealed class Chip3D : MonoBehaviour
         }
 
         _gameContext?.SaveCurrentBettingState();
+        _gameContext?.AudioFeedbackController?.PlayChipDrop();
 
         _chipManager?.ReturnChipToTray(Value);
 
@@ -613,6 +616,7 @@ public sealed class Chip3D : MonoBehaviour
             _assignedBetSpot = _dragOriginBetSpot;
             _dragOriginBetSpot = null;
             _gameContext?.SaveCurrentBettingState();
+            _gameContext?.AudioFeedbackController?.PlayChipDrop();
         }
 
         _returnToOriginCoroutine = null;
@@ -664,6 +668,7 @@ public sealed class Chip3D : MonoBehaviour
         }
 
         _gameContext?.SaveCurrentBettingState();
+        _gameContext?.AudioFeedbackController?.PlayChipDrop();
 
         SetCollidersEnabled(true);
         _settleCoroutine = null;

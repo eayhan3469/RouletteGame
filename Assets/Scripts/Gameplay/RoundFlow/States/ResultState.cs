@@ -78,6 +78,7 @@ public sealed class ResultState : GameStateBase
 
         if (Context.ResultUIController != null)
         {
+            Context.AudioFeedbackController?.PlayRoundResult(roundResult);
             Context.ResultUIController.ShowResult(roundResult, _winningNumber);
         }
         else
