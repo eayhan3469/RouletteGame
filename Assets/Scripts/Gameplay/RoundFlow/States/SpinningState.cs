@@ -5,6 +5,7 @@ public sealed class SpinningState : GameStateBase
 {
     private readonly int _targetNumber;
     private bool _isActive;
+    private bool _shouldDriveWheelLoopAudio;
 
     public SpinningState(GameContext context, StateMachine stateMachine)
         : this(context, stateMachine, -1)
@@ -22,6 +23,7 @@ public sealed class SpinningState : GameStateBase
         LogLifecycle($"Enter - Target Number: {_targetNumber}");
 
         _isActive = true;
+        _shouldDriveWheelLoopAudio = true;
         Context.SavePendingSpinBets();
         Context.AudioFeedbackController?.PlayWheelSpinLoop();
 
@@ -35,6 +37,10 @@ public sealed class SpinningState : GameStateBase
 
         Context.WheelController.BallReleased -= HandleBallReleased;
         Context.WheelController.BallReleased += HandleBallReleased;
+        Context.WheelController.BallPocketEntryStarted -= HandleBallPocketEntryStarted;
+        Context.WheelController.BallPocketEntryStarted += HandleBallPocketEntryStarted;
+        Context.WheelController.BallPocketBounced -= HandleBallPocketBounced;
+        Context.WheelController.BallPocketBounced += HandleBallPocketBounced;
         Context.WheelController.BallPocketLanded -= HandleBallPocketLanded;
         Context.WheelController.BallPocketLanded += HandleBallPocketLanded;
         Context.WheelController.SpinToNumber(_targetNumber, HandleSpinCompleted);
@@ -51,11 +57,14 @@ public sealed class SpinningState : GameStateBase
         if (Context.WheelController != null)
         {
             Context.WheelController.BallReleased -= HandleBallReleased;
+            Context.WheelController.BallPocketEntryStarted -= HandleBallPocketEntryStarted;
+            Context.WheelController.BallPocketBounced -= HandleBallPocketBounced;
             Context.WheelController.BallPocketLanded -= HandleBallPocketLanded;
         }
 
         Context.AudioFeedbackController?.StopWheelSpinLoop();
         Context.AudioFeedbackController?.StopBallTravelLoop();
+        _shouldDriveWheelLoopAudio = false;
         _isActive = false;
         LogLifecycle("Exit");
     }
@@ -76,16 +85,31 @@ public sealed class SpinningState : GameStateBase
         Context.AudioFeedbackController?.PlayBallTravelLoop();
     }
 
+    private void HandleBallPocketEntryStarted()
+    {
+        _shouldDriveWheelLoopAudio = false;
+        Context.AudioFeedbackController?.StopBallTravelLoop();
+        Context.AudioFeedbackController?.StopWheelSpinLoop();
+    }
+
+    private void HandleBallPocketBounced(float bounceIntensity)
+    {
+        Context.AudioFeedbackController?.PlayBallPocketBounce(bounceIntensity);
+    }
+
     private void HandleBallPocketLanded()
     {
-        Context.AudioFeedbackController?.StopWheelSpinLoop();
-        Context.AudioFeedbackController?.StopBallTravelLoop();
         Context.AudioFeedbackController?.PlayBallPocketLand();
     }
 
     private void UpdateWheelLoopAudio()
     {
         if (Context.WheelController == null || Context.AudioFeedbackController == null)
+        {
+            return;
+        }
+
+        if (!_shouldDriveWheelLoopAudio)
         {
             return;
         }

@@ -29,6 +29,10 @@ public sealed class RouletteAudioFeedbackController : MonoBehaviour
 
     [SerializeField]
     [Range(0f, 1f)]
+    private float _wheelLoopStopThresholdNormalized = 0.06f;
+
+    [SerializeField]
+    [Range(0f, 1f)]
     private float _ballLoopVolume = 0.24f;
 
     [SerializeField]
@@ -50,6 +54,18 @@ public sealed class RouletteAudioFeedbackController : MonoBehaviour
     [SerializeField]
     [Range(0f, 1f)]
     private float _ballPocketVolume = 0.58f;
+
+    [SerializeField]
+    [Range(0f, 1f)]
+    private float _ballBounceVolume = 0.34f;
+
+    [SerializeField]
+    [Range(0.1f, 3f)]
+    private float _ballBounceMinPitch = 0.9f;
+
+    [SerializeField]
+    [Range(0.1f, 3f)]
+    private float _ballBounceMaxPitch = 1.2f;
 
     [SerializeField]
     [Range(0f, 1f)]
@@ -85,6 +101,9 @@ public sealed class RouletteAudioFeedbackController : MonoBehaviour
     private AudioClip _ballPocketClip;
 
     [SerializeField]
+    private AudioClip _ballBounceClip;
+
+    [SerializeField]
     private AudioClip _chipPickupClip;
 
     [SerializeField]
@@ -101,6 +120,7 @@ public sealed class RouletteAudioFeedbackController : MonoBehaviour
 
     private AudioSource _wheelLoopSource;
     private AudioSource _ballLoopSource;
+    private AudioSource _ballBounceSource;
     private AudioSource _sfxSource;
     private AudioSource _resultSource;
 
@@ -143,10 +163,29 @@ public sealed class RouletteAudioFeedbackController : MonoBehaviour
         }
 
         float clampedIntensity = Mathf.Clamp01(normalizedIntensity);
+
+        if (clampedIntensity <= _wheelLoopStopThresholdNormalized)
+        {
+            _wheelLoopSource.volume = 0f;
+
+            if (_wheelLoopSource.isPlaying)
+            {
+                _wheelLoopSource.Stop();
+            }
+
+            return;
+        }
+
         _wheelLoopSource.pitch = Mathf.Lerp(_wheelLoopMinPitch, _wheelLoopMaxPitch, clampedIntensity);
 
         float volumeFactor = Mathf.Lerp(_wheelLoopMinVolumeFactor, 1f, clampedIntensity);
         _wheelLoopSource.volume = _masterVolume * _wheelLoopVolume * volumeFactor;
+
+        if (!_wheelLoopSource.isPlaying && _wheelLoopClip != null)
+        {
+            _wheelLoopSource.clip = _wheelLoopClip;
+            _wheelLoopSource.Play();
+        }
     }
 
     public void PlayBallTravelLoop()
@@ -199,6 +238,27 @@ public sealed class RouletteAudioFeedbackController : MonoBehaviour
         PlayOneShot(_sfxSource, _ballPocketClip, _ballPocketVolume);
     }
 
+    public void PlayBallPocketBounce(float normalizedIntensity)
+    {
+        EnsureAudioSources();
+
+        if (_ballBounceSource == null)
+        {
+            return;
+        }
+
+        AudioClip bounceClip = _ballBounceClip != null ? _ballBounceClip : _ballPocketClip;
+
+        if (bounceClip == null)
+        {
+            return;
+        }
+
+        float clampedIntensity = Mathf.Clamp01(normalizedIntensity);
+        _ballBounceSource.pitch = Mathf.Lerp(_ballBounceMinPitch, _ballBounceMaxPitch, clampedIntensity);
+        _ballBounceSource.PlayOneShot(bounceClip, _masterVolume * _ballBounceVolume);
+    }
+
     public void PlayChipPickup()
     {
         PlayOneShot(_sfxSource, _chipPickupClip, _chipPickupVolume);
@@ -236,6 +296,11 @@ public sealed class RouletteAudioFeedbackController : MonoBehaviour
         if (_ballLoopSource == null)
         {
             _ballLoopSource = CreateAudioSource("BallLoopSource", true, 98);
+        }
+
+        if (_ballBounceSource == null)
+        {
+            _ballBounceSource = CreateAudioSource("BallBounceSource", false, 104);
         }
 
         if (_sfxSource == null)
