@@ -48,6 +48,8 @@ public sealed class BettingState : GameStateBase
         Context.StatisticsUIController?.RefreshStats(Context.PlayerData);
         Context.BettingUIController.OnSpinTriggered -= HandleSpinTriggered;
         Context.BettingUIController.OnSpinTriggered += HandleSpinTriggered;
+        Context.BettingUIController.OnMenuTriggered -= HandleMenuTriggered;
+        Context.BettingUIController.OnMenuTriggered += HandleMenuTriggered;
     }
 
     private void UnsubscribeFromBettingUi()
@@ -55,6 +57,7 @@ public sealed class BettingState : GameStateBase
         if (Context.BettingUIController != null)
         {
             Context.BettingUIController.OnSpinTriggered -= HandleSpinTriggered;
+            Context.BettingUIController.OnMenuTriggered -= HandleMenuTriggered;
         }
     }
 
@@ -143,6 +146,12 @@ public sealed class BettingState : GameStateBase
 
         int resolvedTargetNumber = ResolveTargetNumber(targetNumber, Context.PlayerData.IsEuropeanRoulette);
         StateMachine.ChangeState(new SpinningState(Context, StateMachine, resolvedTargetNumber));
+    }
+
+    private void HandleMenuTriggered()
+    {
+        Context.SaveCurrentBettingState();
+        StateMachine.ChangeState(new InitializeState(Context, StateMachine));
     }
 
     private int ResolveTargetNumber(int targetNumber, bool isEuropeanRoulette)

@@ -22,18 +22,24 @@ public sealed class BettingUIController : MonoBehaviour
     [SerializeField]
     private Button _spinButton;
 
+    [SerializeField]
+    private Button _menuButton;
+
     public event Action<int> OnSpinTriggered;
+    public event Action OnMenuTriggered;
 
     public DeterministicNumpad DeterministicNumpad => _deterministicNumpad;
 
     private void Awake()
     {
         RegisterSpinButton();
+        RegisterMenuButton();
     }
 
     private void OnDestroy()
     {
         UnregisterSpinButton();
+        UnregisterMenuButton();
     }
 
     public void Initialize(bool isEuropean, float balance, float totalBet)
@@ -93,9 +99,34 @@ public sealed class BettingUIController : MonoBehaviour
         }
     }
 
+    private void RegisterMenuButton()
+    {
+        if (_menuButton == null)
+        {
+            Debug.LogWarning("BettingUIController is missing the Menu button reference.");
+            return;
+        }
+
+        _menuButton.onClick.RemoveListener(HandleMenuClicked);
+        _menuButton.onClick.AddListener(HandleMenuClicked);
+    }
+
+    private void UnregisterMenuButton()
+    {
+        if (_menuButton != null)
+        {
+            _menuButton.onClick.RemoveListener(HandleMenuClicked);
+        }
+    }
+
     private void HandleSpinClicked()
     {
         int selectedNumber = _deterministicNumpad != null ? _deterministicNumpad.SelectedNumber : -1;
         OnSpinTriggered?.Invoke(selectedNumber);
+    }
+
+    private void HandleMenuClicked()
+    {
+        OnMenuTriggered?.Invoke();
     }
 }
