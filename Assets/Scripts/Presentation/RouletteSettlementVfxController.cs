@@ -89,17 +89,18 @@ public sealed class RouletteSettlementVfxController : MonoBehaviour
         float roundResult,
         float amountWon,
         IReadOnlyList<BetManager.PlacedBet> activeBets,
-        ChipManager chipManager)
+        ChipManager chipManager,
+        RouletteAudioFeedbackController audioFeedbackController)
     {
         StopAndClear();
 
         if (roundResult > 0f)
         {
-            yield return PlayWinSettlement(amountWon, chipManager);
+            yield return PlayWinSettlement(amountWon, chipManager, audioFeedbackController);
             yield break;
         }
 
-        yield return PlayLoseSettlement(activeBets);
+        yield return PlayLoseSettlement(activeBets, audioFeedbackController);
     }
 
     public void StopAndClear()
@@ -137,7 +138,10 @@ public sealed class RouletteSettlementVfxController : MonoBehaviour
         _stackBaseScales.Clear();
     }
 
-    private IEnumerator PlayWinSettlement(float amountWon, ChipManager chipManager)
+    private IEnumerator PlayWinSettlement(
+        float amountWon,
+        ChipManager chipManager,
+        RouletteAudioFeedbackController audioFeedbackController)
     {
         if (chipManager == null || amountWon <= 0f)
         {
@@ -168,6 +172,7 @@ public sealed class RouletteSettlementVfxController : MonoBehaviour
             if (rewardChip != null)
             {
                 _temporaryRewardChips.Add(rewardChip);
+                audioFeedbackController?.PlaySettlementChipMove();
                 StartCoroutine(AnimateChipRoutine(
                     rewardChip.transform,
                     startPosition,
@@ -187,7 +192,9 @@ public sealed class RouletteSettlementVfxController : MonoBehaviour
         yield return new WaitForSeconds(_rewardChipTravelDuration);
     }
 
-    private IEnumerator PlayLoseSettlement(IReadOnlyList<BetManager.PlacedBet> activeBets)
+    private IEnumerator PlayLoseSettlement(
+        IReadOnlyList<BetManager.PlacedBet> activeBets,
+        RouletteAudioFeedbackController audioFeedbackController)
     {
         List<BetManager.PlacedBet> settlementBets = CreateUniqueSettlementBetList(activeBets);
 
@@ -208,6 +215,7 @@ public sealed class RouletteSettlementVfxController : MonoBehaviour
             }
 
             Vector3 scatteredTarget = dealerTargetPosition + GetRandomHorizontalOffset(_dealerTargetScatterRadius);
+            audioFeedbackController?.PlaySettlementChipMove();
             StartCoroutine(AnimateLosingChipRoutine(
                 placedBet.Chip,
                 placedBet.Spot,

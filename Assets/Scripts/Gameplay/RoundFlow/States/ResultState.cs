@@ -23,6 +23,7 @@ public sealed class ResultState : GameStateBase
     public override void Enter()
     {
         LogLifecycle($"Enter - Winning Number: {_winningNumber}");
+        Context.SetChipInteractionEnabled(false);
         Context.WinVfxController?.StopAndClear();
         Context.SettlementVfxController?.StopAndClear();
 
@@ -114,7 +115,8 @@ public sealed class ResultState : GameStateBase
                 roundResult,
                 amountWon,
                 Context.BetManager != null ? Context.BetManager.ActiveBets : null,
-                Context.ChipManager);
+                Context.ChipManager,
+                Context.AudioFeedbackController);
         }
 
         yield return new WaitForSeconds(ResultHoldAfterSettlement);

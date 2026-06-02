@@ -71,6 +71,7 @@ public sealed class GameContext : MonoBehaviour
     public ChipManager ChipManager => _chipManager;
     public BetManager BetManager => _betManager;
     public WheelController WheelController => _wheelController;
+    public bool IsChipInteractionEnabled { get; private set; }
     public PlayerData PlayerData { get; private set; }
 
     private void Awake()
@@ -105,6 +106,11 @@ public sealed class GameContext : MonoBehaviour
     public void SetPlayerData(PlayerData playerData)
     {
         PlayerData = playerData;
+    }
+
+    public void SetChipInteractionEnabled(bool isEnabled)
+    {
+        IsChipInteractionEnabled = isEnabled;
     }
 
     private void EnsureAudioFeedbackController()

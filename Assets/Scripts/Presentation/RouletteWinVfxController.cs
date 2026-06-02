@@ -23,6 +23,9 @@ public sealed class RouletteWinVfxController : MonoBehaviour
     [SerializeField]
     private ParticleSystem _waterfall;
 
+    [SerializeField]
+    private AudioSource _waterfallChipsAudioSource;
+
     private Coroutine _playRoutine;
 
     private void Awake()
@@ -62,6 +65,11 @@ public sealed class RouletteWinVfxController : MonoBehaviour
         yield return new WaitForSeconds(_explosionInterval);
 
         PlayParticle(_waterfall);
+        if (_waterfallChipsAudioSource != null)
+        {
+            _waterfallChipsAudioSource.Play();
+        }
+        
         _playRoutine = null;
     }
 

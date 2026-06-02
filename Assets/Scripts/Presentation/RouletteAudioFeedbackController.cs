@@ -77,6 +77,18 @@ public sealed class RouletteAudioFeedbackController : MonoBehaviour
 
     [SerializeField]
     [Range(0f, 1f)]
+    private float _settlementChipMoveVolume = 0.24f;
+
+    [SerializeField]
+    [Range(0.1f, 3f)]
+    private float _settlementChipMoveMinPitch = 0.92f;
+
+    [SerializeField]
+    [Range(0.1f, 3f)]
+    private float _settlementChipMoveMaxPitch = 1.08f;
+
+    [SerializeField]
+    [Range(0f, 1f)]
     private float _winResultVolume = 0.5f;
 
     [SerializeField]
@@ -110,6 +122,9 @@ public sealed class RouletteAudioFeedbackController : MonoBehaviour
     private AudioClip _chipDropClip;
 
     [SerializeField]
+    private AudioClip _settlementChipMoveClip;
+
+    [SerializeField]
     private AudioClip _winResultClip;
 
     [SerializeField]
@@ -122,6 +137,7 @@ public sealed class RouletteAudioFeedbackController : MonoBehaviour
     private AudioSource _ballLoopSource;
     private AudioSource _ballBounceSource;
     private AudioSource _sfxSource;
+    private AudioSource _settlementChipSource;
     private AudioSource _resultSource;
 
     private void Awake()
@@ -269,6 +285,28 @@ public sealed class RouletteAudioFeedbackController : MonoBehaviour
         PlayOneShot(_sfxSource, _chipDropClip, _chipDropVolume);
     }
 
+    public void PlaySettlementChipMove()
+    {
+        EnsureAudioSources();
+
+        if (_settlementChipSource == null)
+        {
+            return;
+        }
+
+        AudioClip settlementClip = _settlementChipMoveClip != null
+            ? _settlementChipMoveClip
+            : _chipDropClip;
+
+        if (settlementClip == null)
+        {
+            return;
+        }
+
+        _settlementChipSource.pitch = Random.Range(_settlementChipMoveMinPitch, _settlementChipMoveMaxPitch);
+        _settlementChipSource.PlayOneShot(settlementClip, _masterVolume * _settlementChipMoveVolume);
+    }
+
     public void PlayRoundResult(float roundResult)
     {
         if (roundResult > 0f)
@@ -306,6 +344,11 @@ public sealed class RouletteAudioFeedbackController : MonoBehaviour
         if (_sfxSource == null)
         {
             _sfxSource = CreateAudioSource("SfxSource", false, 110);
+        }
+
+        if (_settlementChipSource == null)
+        {
+            _settlementChipSource = CreateAudioSource("SettlementChipSource", false, 108);
         }
 
         if (_resultSource == null)

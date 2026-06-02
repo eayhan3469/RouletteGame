@@ -16,6 +16,7 @@ public sealed class SpinningState : GameStateBase
     {
         LogLifecycle($"Enter - Target Number: {_targetNumber}");
 
+        Context.SetChipInteractionEnabled(false);
         _isActive = true;
         Context.SavePendingSpinBets(_targetNumber);
 

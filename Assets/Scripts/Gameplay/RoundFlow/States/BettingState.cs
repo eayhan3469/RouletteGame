@@ -13,6 +13,7 @@ public sealed class BettingState : GameStateBase
 
     public override void Enter()
     {
+        Context.SetChipInteractionEnabled(false);
         ResetTrayChipsFromBalance();
         RestoreSavedBetsIfNeeded();
         LogLifecycle("Enter");
@@ -32,6 +33,7 @@ public sealed class BettingState : GameStateBase
 
     public override void Exit()
     {
+        Context.SetChipInteractionEnabled(false);
         UnsubscribeFromBettingUi();
         UnsubscribeFromBetManager();
         Context.SetBettingUiVisible(false);
@@ -47,6 +49,7 @@ public sealed class BettingState : GameStateBase
         }
 
         Context.SetBettingUiVisible(true);
+        Context.SetChipInteractionEnabled(true);
         Context.BettingUIController.Initialize(
             Context.PlayerData != null && Context.PlayerData.IsEuropeanRoulette,
             Context.PlayerData != null ? Context.PlayerData.Balance : 0f,
@@ -169,6 +172,11 @@ public sealed class BettingState : GameStateBase
 
     private void HandleSpinTriggered(int targetNumber)
     {
+        if (Chip3D.HasActiveDrag)
+        {
+            return;
+        }
+
         if (Context.PlayerData == null)
         {
             UnityEngine.Debug.LogError("BettingState could not start spinning because PlayerData is missing.");

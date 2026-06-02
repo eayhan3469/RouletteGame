@@ -16,6 +16,7 @@ public sealed class InitializeState : GameStateBase
     public override void Enter()
     {
         LogLifecycle("Enter");
+        Context.SetChipInteractionEnabled(false);
 
         bool hasExistingSave = File.Exists(SaveLoadManager.SavePath);
         PlayerData playerData = SaveLoadManager.Load();

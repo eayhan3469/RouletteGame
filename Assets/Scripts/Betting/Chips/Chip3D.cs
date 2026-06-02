@@ -94,6 +94,7 @@ public sealed class Chip3D : MonoBehaviour
     private bool _isTrayChip;
 
     public int Value => _value;
+    public static bool HasActiveDrag => _activeDraggedChip != null;
 
     private void Awake()
     {
@@ -110,6 +111,12 @@ public sealed class Chip3D : MonoBehaviour
 
         if (mouse == null)
         {
+            return;
+        }
+
+        if (!CanAcceptChipInput())
+        {
+            CancelDragIfInteractionWasDisabled();
             return;
         }
 
@@ -198,6 +205,11 @@ public sealed class Chip3D : MonoBehaviour
 
     private void TryBeginDrag(Vector2 screenPosition)
     {
+        if (!CanAcceptChipInput())
+        {
+            return;
+        }
+
         if (_activeDraggedChip != null)
         {
             return;
@@ -260,6 +272,11 @@ public sealed class Chip3D : MonoBehaviour
 
     private void TryReturnPlacedBet(Vector2 screenPosition)
     {
+        if (!CanAcceptChipInput())
+        {
+            return;
+        }
+
         if (_isDragging || _assignedBetSpot == null || _activeDraggedChip != null)
         {
             return;
@@ -307,7 +324,7 @@ public sealed class Chip3D : MonoBehaviour
 
     private void DragToPointer(Vector2 screenPosition)
     {
-        if (!_isDragging)
+        if (!_isDragging || !CanAcceptChipInput())
         {
             return;
         }
@@ -357,7 +374,7 @@ public sealed class Chip3D : MonoBehaviour
 
     private void EndDrag()
     {
-        if (!_isDragging)
+        if (!_isDragging || !CanAcceptChipInput())
         {
             return;
         }
@@ -383,6 +400,33 @@ public sealed class Chip3D : MonoBehaviour
 
         ClearHoveredSpot();
         _returnToOriginCoroutine = StartCoroutine(ReturnToOriginRoutine());
+    }
+
+    private bool CanAcceptChipInput()
+    {
+        if (_gameContext == null)
+        {
+            _gameContext = FindFirstObjectByType<GameContext>();
+        }
+
+        return _gameContext == null || _gameContext.IsChipInteractionEnabled;
+    }
+
+    private void CancelDragIfInteractionWasDisabled()
+    {
+        if (_activeDraggedChip != this || !_isDragging)
+        {
+            return;
+        }
+
+        _isDragging = false;
+        _activeDraggedChip = null;
+        ClearHoveredSpot();
+
+        if (_returnToOriginCoroutine == null)
+        {
+            _returnToOriginCoroutine = StartCoroutine(ReturnToOriginRoutine());
+        }
     }
 
     private void ApplyVisuals(int value, Color bodyColor, Color stripeColor, Color textColor)
