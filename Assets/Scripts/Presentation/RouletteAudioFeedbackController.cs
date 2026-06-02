@@ -143,6 +143,7 @@ public sealed class RouletteAudioFeedbackController : MonoBehaviour
     private void Awake()
     {
         EnsureAudioSources();
+        PreloadAudioClips();
     }
 
     public void PlayWheelSpinLoop()
@@ -355,6 +356,31 @@ public sealed class RouletteAudioFeedbackController : MonoBehaviour
         {
             _resultSource = CreateAudioSource("ResultSource", false, 105);
         }
+    }
+
+    private void PreloadAudioClips()
+    {
+        PreloadAudioClip(_wheelLoopClip);
+        PreloadAudioClip(_ballLoopClip);
+        PreloadAudioClip(_ballReleaseClip);
+        PreloadAudioClip(_ballPocketClip);
+        PreloadAudioClip(_ballBounceClip);
+        PreloadAudioClip(_chipPickupClip);
+        PreloadAudioClip(_chipDropClip);
+        PreloadAudioClip(_settlementChipMoveClip);
+        PreloadAudioClip(_winResultClip);
+        PreloadAudioClip(_loseResultClip);
+        PreloadAudioClip(_neutralResultClip);
+    }
+
+    private void PreloadAudioClip(AudioClip audioClip)
+    {
+        if (audioClip == null || audioClip.loadState != AudioDataLoadState.Unloaded)
+        {
+            return;
+        }
+
+        audioClip.LoadAudioData();
     }
 
     private AudioSource CreateAudioSource(string sourceName, bool shouldLoop, int priority)
