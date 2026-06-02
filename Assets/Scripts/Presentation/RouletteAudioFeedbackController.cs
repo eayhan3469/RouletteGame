@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 /// <summary>
@@ -139,6 +140,7 @@ public sealed class RouletteAudioFeedbackController : MonoBehaviour
     private AudioSource _sfxSource;
     private AudioSource _settlementChipSource;
     private AudioSource _resultSource;
+    private Coroutine _ballTravelLoopDelayRoutine;
 
     private void Awake()
     {
@@ -225,6 +227,8 @@ public sealed class RouletteAudioFeedbackController : MonoBehaviour
 
     public void StopBallTravelLoop()
     {
+        StopPendingBallTravelLoopStart();
+
         if (_ballLoopSource != null && _ballLoopSource.isPlaying)
         {
             _ballLoopSource.Stop();
@@ -248,6 +252,21 @@ public sealed class RouletteAudioFeedbackController : MonoBehaviour
     public void PlayBallRelease()
     {
         PlayOneShot(_sfxSource, _ballReleaseClip, _ballReleaseVolume);
+    }
+
+    public void PlayBallReleaseThenTravelLoop()
+    {
+        EnsureAudioSources();
+        StopPendingBallTravelLoopStart();
+        PlayBallRelease();
+
+        if (_ballReleaseClip == null || _ballReleaseClip.length <= 0f)
+        {
+            PlayBallTravelLoop();
+            return;
+        }
+
+        _ballTravelLoopDelayRoutine = StartCoroutine(StartBallTravelLoopAfterDelay(_ballReleaseClip.length));
     }
 
     public void PlayBallPocketLand()
@@ -381,6 +400,24 @@ public sealed class RouletteAudioFeedbackController : MonoBehaviour
         }
 
         audioClip.LoadAudioData();
+    }
+
+    private IEnumerator StartBallTravelLoopAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        _ballTravelLoopDelayRoutine = null;
+        PlayBallTravelLoop();
+    }
+
+    private void StopPendingBallTravelLoopStart()
+    {
+        if (_ballTravelLoopDelayRoutine == null)
+        {
+            return;
+        }
+
+        StopCoroutine(_ballTravelLoopDelayRoutine);
+        _ballTravelLoopDelayRoutine = null;
     }
 
     private AudioSource CreateAudioSource(string sourceName, bool shouldLoop, int priority)

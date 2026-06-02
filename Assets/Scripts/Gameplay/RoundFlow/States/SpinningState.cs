@@ -70,8 +70,7 @@ public sealed class SpinningState : GameStateBase
 
     private void HandleBallReleased()
     {
-        Context.AudioFeedbackController?.PlayBallRelease();
-        Context.AudioFeedbackController?.PlayBallTravelLoop();
+        Context.AudioFeedbackController?.PlayBallReleaseThenTravelLoop();
     }
 
     private void HandleBallPocketEntryStarted()
@@ -86,6 +85,7 @@ public sealed class SpinningState : GameStateBase
 
     private void HandleBallPocketLanded()
     {
+        //Context.AudioFeedbackController?.StopBallTravelLoop();
         Context.AudioFeedbackController?.PlayBallPocketLand();
     }
 

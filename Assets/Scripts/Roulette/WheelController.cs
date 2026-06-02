@@ -49,7 +49,7 @@ public sealed class WheelController : MonoBehaviour
 
     [SerializeField]
     [Min(0.1f)]
-    private float _dropDuration = 3.3f;
+    private float _dropDuration = 3.6f;
 
     [Header("Wheel Motion")]
     [SerializeField]
