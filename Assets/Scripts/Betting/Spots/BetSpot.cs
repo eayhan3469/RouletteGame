@@ -48,9 +48,17 @@ public sealed class BetSpot : MonoBehaviour
 
     private void Awake()
     {
+        CacheHighlightRendererIfNeeded();
         _cachedCollider = GetComponent<Collider>();
         SetNumberHighlightVisible(false, Color.white, 0);
     }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        CacheHighlightRendererIfNeeded();
+    }
+#endif
 
     /// <summary>
     /// Returns the collider bounds used both for hover highlighting
@@ -108,6 +116,35 @@ public sealed class BetSpot : MonoBehaviour
         _numberHighlightRenderer.color = color;
         _numberHighlightRenderer.sortingOrder = sortingOrder;
         _numberHighlightRenderer.enabled = isVisible;
+    }
+
+    private void CacheHighlightRendererIfNeeded()
+    {
+        if (_numberHighlightRenderer != null)
+        {
+            return;
+        }
+
+        Transform highlightTransform = transform.Find("Highlight");
+
+        if (highlightTransform != null)
+        {
+            _numberHighlightRenderer = highlightTransform.GetComponent<SpriteRenderer>();
+        }
+
+        if (_numberHighlightRenderer == null)
+        {
+            SpriteRenderer[] childRenderers = GetComponentsInChildren<SpriteRenderer>(true);
+
+            for (int i = 0; i < childRenderers.Length; i++)
+            {
+                if (childRenderers[i] != null && childRenderers[i].transform != transform)
+                {
+                    _numberHighlightRenderer = childRenderers[i];
+                    break;
+                }
+            }
+        }
     }
 
     private string GetHierarchyPath()

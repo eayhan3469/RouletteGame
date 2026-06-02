@@ -24,7 +24,6 @@ public static class SaveLoadManager
         {
             string json = JsonUtility.ToJson(playerData, true);
             File.WriteAllText(SavePath, json);
-            Debug.Log($"Player data saved to: {SavePath}");
         }
         catch (Exception exception)
         {
@@ -36,7 +35,6 @@ public static class SaveLoadManager
     {
         if (!File.Exists(SavePath))
         {
-            Debug.Log("No save file found. Returning default player data.");
             return new PlayerData();
         }
 
@@ -71,14 +69,12 @@ public static class SaveLoadManager
     {
         if (!File.Exists(SavePath))
         {
-            Debug.Log("No save file found to delete.");
             return false;
         }
 
         try
         {
             File.Delete(SavePath);
-            Debug.Log($"Player save deleted from: {SavePath}");
             return true;
         }
         catch (Exception exception)

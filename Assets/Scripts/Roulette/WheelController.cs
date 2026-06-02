@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 /// <summary>
 /// Simulates roulette wheel spinning and ball dropping using pure transform math.
@@ -44,32 +45,16 @@ public sealed class WheelController : MonoBehaviour
     [Header("Timing")]
     [SerializeField]
     [Min(0.1f)]
-    private float _ballAppearDelay = 0.5f;
-
-    [SerializeField]
-    [Min(0.1f)]
     private float _rimTravelDuration = 1.35f;
 
     [SerializeField]
     [Min(0.1f)]
     private float _dropDuration = 3.3f;
 
-    [Header("Wheel Speeds")]
+    [Header("Wheel Motion")]
     [SerializeField]
     [Min(0f)]
-    private float _wheelStartupDegreesPerSecond = 720f;
-
-    [SerializeField]
-    [Min(0f)]
-    private float _wheelDropDegreesPerSecond = 240f;
-
-    [SerializeField]
-    [Min(0f)]
-    private float _wheelPocketDegreesPerSecond = 155f;
-
-    [SerializeField]
-    [Min(0f)]
-    private float _wheelStopDegreesPerSecond = 0f;
+    private float _continuousWheelDegreesPerSecond = 36f;
 
     [Header("Ball Speeds")]
     [SerializeField]
@@ -105,8 +90,13 @@ public sealed class WheelController : MonoBehaviour
     private float _extraFullTurns = 6f;
 
     [SerializeField]
+    [FormerlySerializedAs("_wheelSettleDuration")]
     [Min(0.1f)]
-    private float _wheelSettleDuration = 1.05f;
+    private float _pocketSettleDuration = 1.05f;
+
+    [SerializeField]
+    [Min(0f)]
+    private float _landedBallVisibleDuration = 0.65f;
 
     [SerializeField]
     [Min(0)]
@@ -131,17 +121,16 @@ public sealed class WheelController : MonoBehaviour
     private readonly Dictionary<int, WheelSlot> _slotLookup = new Dictionary<int, WheelSlot>();
     private Renderer[] _ballRenderers = Array.Empty<Renderer>();
     private Coroutine _spinRoutine;
+    private Coroutine _hideLandedBallRoutine;
+    private Transform _ballRestParent;
+    private bool _hasCachedBallRestParent;
     private bool _isSpinning;
     private float _currentWheelDegreesPerSecond;
     private float _currentBallDegreesPerSecond;
 
     public bool IsSpinning => _isSpinning;
     public float CurrentWheelDegreesPerSecond => _currentWheelDegreesPerSecond;
-    public float MaxWheelDegreesPerSecond => Mathf.Max(
-        _wheelStartupDegreesPerSecond,
-        _wheelDropDegreesPerSecond,
-        _wheelPocketDegreesPerSecond,
-        _wheelStopDegreesPerSecond);
+    public float MaxWheelDegreesPerSecond => _continuousWheelDegreesPerSecond;
     public float CurrentBallDegreesPerSecond => _currentBallDegreesPerSecond;
     public float MaxBallDegreesPerSecond => Mathf.Max(_ballRimStartDegreesPerSecond, _ballRimEndDegreesPerSecond);
     public event Action BallReleased;
@@ -155,6 +144,19 @@ public sealed class WheelController : MonoBehaviour
         BuildSlotLookup();
         CacheBallRimOffsetFromScene();
         CacheBallVisuals();
+        CacheBallRestParent();
+        SetBallVisible(false);
+        _currentWheelDegreesPerSecond = _continuousWheelDegreesPerSecond;
+    }
+
+    private void Update()
+    {
+        if (_isSpinning)
+        {
+            return;
+        }
+
+        RotateWheelAtContinuousSpeed(Time.deltaTime);
     }
 
 #if UNITY_EDITOR
@@ -212,6 +214,7 @@ public sealed class WheelController : MonoBehaviour
             _spinRoutine = null;
         }
 
+        StopHideLandedBallRoutine();
         _spinRoutine = StartCoroutine(SpinRoutine(targetSlot, onSpinComplete));
     }
 
@@ -220,28 +223,10 @@ public sealed class WheelController : MonoBehaviour
         _isSpinning = true;
 
         PrepareBallForSpin();
-        SetBallVisible(false);
+        SetBallVisible(true);
         _currentBallDegreesPerSecond = 0f;
 
         Vector3 orbitCenterWorldPosition = _ballRimPivot.position;
-
-        float elapsedTime = 0f;
-
-        while (elapsedTime < _ballAppearDelay)
-        {
-            elapsedTime += Time.deltaTime;
-            float normalizedTime = Mathf.Clamp01(elapsedTime / _ballAppearDelay);
-            float wheelSpeed = Mathf.Lerp(
-                _wheelStartupDegreesPerSecond * 0.82f,
-                _wheelStartupDegreesPerSecond,
-                EaseOutCubic(normalizedTime));
-
-            _currentWheelDegreesPerSecond = wheelSpeed;
-            RotateWheelClockwise(wheelSpeed * Time.deltaTime);
-            yield return null;
-        }
-
-        SetBallVisible(true);
         BallReleased?.Invoke();
 
         Vector3 visibleBallOffset = _ballTransform.position - orbitCenterWorldPosition;
@@ -249,9 +234,8 @@ public sealed class WheelController : MonoBehaviour
         float rimHeight = visibleBallOffset.y;
         float currentBallWorldAngle = Mathf.Atan2(visibleBallOffset.z, visibleBallOffset.x) * Mathf.Rad2Deg;
         float pocketEntryDropDuration = _dropDuration * Mathf.Clamp01(_pocketRattleStartNormalized);
-        float pocketRattleDuration = (_dropDuration - pocketEntryDropDuration) + _wheelSettleDuration;
+        float pocketRattleDuration = (_dropDuration - pocketEntryDropDuration) + _pocketSettleDuration;
         float travelDuration = _rimTravelDuration + pocketEntryDropDuration;
-        float totalVisibleDuration = _rimTravelDuration + _dropDuration;
         Vector3 targetLocalPosition = _wheelTransform.InverseTransformPoint(targetSlot.transform.position);
         float projectedWheelRotationDegrees = EstimateWheelRotationDuringVisiblePhase(travelDuration);
         Vector3 projectedTargetWorldPosition = EvaluateProjectedSlotWorldPosition(targetLocalPosition, projectedWheelRotationDegrees);
@@ -288,7 +272,7 @@ public sealed class WheelController : MonoBehaviour
             tumbleAxisB = Vector3.right;
         }
 
-        elapsedTime = 0f;
+        float elapsedTime = 0f;
 
         while (elapsedTime < travelDuration)
         {
@@ -301,7 +285,7 @@ public sealed class WheelController : MonoBehaviour
                 _ballRimStartDegreesPerSecond,
                 _ballRimEndDegreesPerSecond,
                 ballSpeedBlend) * angularSpeedScale;
-            float wheelSpeed = GetWheelSpeedAtElapsedTime(clampedElapsedTime);
+            float wheelSpeed = GetContinuousWheelSpeed();
 
             _currentWheelDegreesPerSecond = wheelSpeed;
             _currentBallDegreesPerSecond = visibleCounterSpeed;
@@ -365,7 +349,7 @@ public sealed class WheelController : MonoBehaviour
                 nextPocketBounceEventIndex++;
             }
 
-            float wheelSpeed = GetWheelSpeedAtElapsedTime(travelDuration + pocketSettleElapsedTime);
+            float wheelSpeed = GetContinuousWheelSpeed();
             _currentWheelDegreesPerSecond = wheelSpeed;
             RotateWheelClockwise(wheelSpeed * deltaTime);
 
@@ -402,8 +386,10 @@ public sealed class WheelController : MonoBehaviour
 
         _ballTransform.position = targetSlot.transform.position;
         _ballTransform.rotation = Quaternion.identity;
-        _currentWheelDegreesPerSecond = 0f;
+        _ballTransform.SetParent(targetSlot.transform, true);
+        _currentWheelDegreesPerSecond = _continuousWheelDegreesPerSecond;
         BallPocketLanded?.Invoke();
+        _hideLandedBallRoutine = StartCoroutine(HideLandedBallAfterDelay());
 
         _isSpinning = false;
         _spinRoutine = null;
@@ -427,27 +413,12 @@ public sealed class WheelController : MonoBehaviour
 
     private float EstimateWheelRotationDuringVisiblePhase(float duration)
     {
-        const int sampleCount = 256;
-
         if (duration <= 0f)
         {
             return 0f;
         }
 
-        float totalRotationDegrees = 0f;
-
-        for (int i = 0; i < sampleCount; i++)
-        {
-            float sampleTimeA = (i / (float)sampleCount) * duration;
-            float sampleTimeB = ((i + 1) / (float)sampleCount) * duration;
-            float speedA = GetWheelSpeedAtElapsedTime(sampleTimeA);
-            float speedB = GetWheelSpeedAtElapsedTime(sampleTimeB);
-            float averageSpeed = (speedA + speedB) * 0.5f;
-
-            totalRotationDegrees += averageSpeed * (duration / sampleCount);
-        }
-
-        return totalRotationDegrees;
+        return _continuousWheelDegreesPerSecond * duration;
     }
 
     private float EstimateBallAngularTravel(float duration)
@@ -475,35 +446,9 @@ public sealed class WheelController : MonoBehaviour
         return totalAngularTravel;
     }
 
-    private float GetWheelSpeedAtElapsedTime(float elapsedTime)
+    private float GetContinuousWheelSpeed()
     {
-        float visibleDuration = _rimTravelDuration + _dropDuration;
-
-        if (elapsedTime <= _rimTravelDuration)
-        {
-            return Mathf.Lerp(
-                _wheelStartupDegreesPerSecond,
-                _wheelDropDegreesPerSecond,
-                EaseOutCubic(Mathf.Clamp01(elapsedTime / _rimTravelDuration)));
-        }
-
-        if (elapsedTime <= visibleDuration)
-        {
-            return Mathf.Lerp(
-                _wheelDropDegreesPerSecond,
-                _wheelPocketDegreesPerSecond,
-                EaseInCubic(Mathf.Clamp01((elapsedTime - _rimTravelDuration) / _dropDuration)));
-        }
-
-        if (_wheelSettleDuration <= 0f)
-        {
-            return _wheelStopDegreesPerSecond;
-        }
-
-        return Mathf.Lerp(
-            _wheelPocketDegreesPerSecond,
-            _wheelStopDegreesPerSecond,
-            EaseOutCubic(Mathf.Clamp01((elapsedTime - visibleDuration) / _wheelSettleDuration)));
+        return _continuousWheelDegreesPerSecond;
     }
 
     private void InitializePocketBouncePath(
@@ -597,6 +542,11 @@ public sealed class WheelController : MonoBehaviour
 
     private void PrepareBallForSpin()
     {
+        if (_ballTransform.parent != _ballRestParent)
+        {
+            _ballTransform.SetParent(_ballRestParent, true);
+        }
+
         _ballRimPivot.localRotation = Quaternion.identity;
         _ballTransform.position = _ballRimPivot.TransformPoint(_ballRimLocalOffset);
         _ballTransform.rotation = Quaternion.identity;
@@ -608,6 +558,35 @@ public sealed class WheelController : MonoBehaviour
         {
             _wheelTransform.Rotate(Vector3.up, -degrees, Space.Self);
         }
+    }
+
+    private void RotateWheelAtContinuousSpeed(float deltaTime)
+    {
+        float wheelSpeed = GetContinuousWheelSpeed();
+        _currentWheelDegreesPerSecond = wheelSpeed;
+        RotateWheelClockwise(wheelSpeed * deltaTime);
+    }
+
+    private IEnumerator HideLandedBallAfterDelay()
+    {
+        if (_landedBallVisibleDuration > 0f)
+        {
+            yield return new WaitForSeconds(_landedBallVisibleDuration);
+        }
+
+        SetBallVisible(false);
+        _hideLandedBallRoutine = null;
+    }
+
+    private void StopHideLandedBallRoutine()
+    {
+        if (_hideLandedBallRoutine == null)
+        {
+            return;
+        }
+
+        StopCoroutine(_hideLandedBallRoutine);
+        _hideLandedBallRoutine = null;
     }
 
     private bool ValidateSetup()
@@ -649,6 +628,8 @@ public sealed class WheelController : MonoBehaviour
                 _ballTransform = ballRenderer.transform;
             }
         }
+
+        CacheBallRestParent();
     }
 
     private void CacheBallVisuals()
@@ -660,6 +641,17 @@ public sealed class WheelController : MonoBehaviour
         }
 
         _ballRenderers = _ballTransform.GetComponentsInChildren<Renderer>(true);
+    }
+
+    private void CacheBallRestParent()
+    {
+        if (_ballTransform == null || _hasCachedBallRestParent)
+        {
+            return;
+        }
+
+        _ballRestParent = _ballTransform.parent;
+        _hasCachedBallRestParent = true;
     }
 
     private void CacheBallRimOffsetFromScene()
@@ -709,21 +701,10 @@ public sealed class WheelController : MonoBehaviour
         }
     }
 
-    private float EaseOutCubic(float t)
-    {
-        float inverse = 1f - t;
-        return 1f - (inverse * inverse * inverse);
-    }
-
     private float EaseOutQuadratic(float t)
     {
         float inverse = 1f - t;
         return 1f - (inverse * inverse);
-    }
-
-    private float EaseInCubic(float t)
-    {
-        return t * t * t;
     }
 
     private void SetBallVisible(bool isVisible)

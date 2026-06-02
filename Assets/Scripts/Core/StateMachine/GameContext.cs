@@ -150,7 +150,7 @@ public sealed class GameContext : MonoBehaviour
         SaveLoadManager.Save(PlayerData);
     }
 
-    public void SavePendingSpinBets()
+    public void SavePendingSpinBets(int pendingSpinTargetNumber)
     {
         if (PlayerData == null)
         {
@@ -158,7 +158,7 @@ public sealed class GameContext : MonoBehaviour
         }
 
         PlayerData.SavedRoundPhase = PlayerData.RoundPhase.Spinning;
-        PlayerData.PendingSpinTargetNumber = -1;
+        PlayerData.PendingSpinTargetNumber = pendingSpinTargetNumber;
         PlayerData.SavedBets = _betManager != null
             ? _betManager.CreateSavedBetsSnapshot()
             : new System.Collections.Generic.List<PlayerData.SavedBetData>();

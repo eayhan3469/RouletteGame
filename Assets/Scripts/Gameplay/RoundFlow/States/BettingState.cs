@@ -16,6 +16,12 @@ public sealed class BettingState : GameStateBase
         ResetTrayChipsFromBalance();
         RestoreSavedBetsIfNeeded();
         LogLifecycle("Enter");
+
+        if (TryResumePendingSpin())
+        {
+            return;
+        }
+
         SubscribeToBetManager();
         ShowBettingUi();
     }
@@ -136,6 +142,31 @@ public sealed class BettingState : GameStateBase
         Context.BetManager.RestoreSavedBets(Context.PlayerData.SavedBets, Context.ChipManager);
     }
 
+    private bool TryResumePendingSpin()
+    {
+        if (Context.PlayerData == null)
+        {
+            return false;
+        }
+
+        if (Context.PlayerData.SavedRoundPhase != PlayerData.RoundPhase.Spinning)
+        {
+            return false;
+        }
+
+        int pendingTargetNumber = Context.PlayerData.PendingSpinTargetNumber;
+
+        if (!IsValidTargetNumber(pendingTargetNumber, Context.PlayerData.IsEuropeanRoulette))
+        {
+            Context.ClearPendingSpinBets();
+            SaveLoadManager.Save(Context.PlayerData);
+            return false;
+        }
+
+        StateMachine.ChangeState(new SpinningState(Context, StateMachine, pendingTargetNumber));
+        return true;
+    }
+
     private void HandleSpinTriggered(int targetNumber)
     {
         if (Context.PlayerData == null)
@@ -156,12 +187,18 @@ public sealed class BettingState : GameStateBase
 
     private int ResolveTargetNumber(int targetNumber, bool isEuropeanRoulette)
     {
-        if (targetNumber >= 0)
+        if (IsValidTargetNumber(targetNumber, isEuropeanRoulette))
         {
             return targetNumber;
         }
 
         int exclusiveMax = isEuropeanRoulette ? 37 : 38;
         return UnityEngine.Random.Range(0, exclusiveMax);
+    }
+
+    private bool IsValidTargetNumber(int targetNumber, bool isEuropeanRoulette)
+    {
+        int exclusiveMax = isEuropeanRoulette ? 37 : 38;
+        return targetNumber >= 0 && targetNumber < exclusiveMax;
     }
 }

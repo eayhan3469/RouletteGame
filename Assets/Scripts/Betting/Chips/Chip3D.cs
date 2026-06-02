@@ -43,14 +43,6 @@ public sealed class Chip3D : MonoBehaviour
     private float _dragHoverOffset = 0.35f;
 
     [SerializeField]
-    [Min(1f)]
-    private float _dropRayDistance = 10f;
-
-    [SerializeField]
-    [Min(0f)]
-    private float _dropRayStartOffset = 1f;
-
-    [SerializeField]
     [Min(0.01f)]
     private float _returnDuration = 0.2f;
 
@@ -454,36 +446,6 @@ public sealed class Chip3D : MonoBehaviour
         return sharedMaterials[materialIndex];
     }
 
-    private bool TryGetBetSpotBelow(out BetSpot betSpot)
-    {
-        Vector3 rayOrigin = transform.position + (Vector3.up * _dropRayStartOffset);
-        Ray dropRay = new Ray(rayOrigin, Vector3.down);
-        int hitCount = Physics.RaycastNonAlloc(dropRay, _raycastHits, _dropRayDistance);
-        float closestDistance = float.MaxValue;
-        BetSpot closestBetSpot = null;
-
-        for (int i = 0; i < hitCount; i++)
-        {
-            RaycastHit hit = _raycastHits[i];
-
-            if (OwnsCollider(hit.collider))
-            {
-                continue;
-            }
-
-            BetSpot candidateBetSpot = hit.collider.GetComponentInParent<BetSpot>();
-
-            if (candidateBetSpot != null && hit.distance < closestDistance)
-            {
-                closestDistance = hit.distance;
-                closestBetSpot = candidateBetSpot;
-            }
-        }
-
-        betSpot = closestBetSpot;
-        return betSpot != null;
-    }
-
     private bool TryGetBetSpotFromPointer(Vector2 screenPosition, out BetSpot betSpot, out Vector3 previewPosition)
     {
         betSpot = null;
@@ -672,8 +634,6 @@ public sealed class Chip3D : MonoBehaviour
 
         SetCollidersEnabled(true);
         _settleCoroutine = null;
-
-        Debug.Log($"Chip value {Value} dropped on bet spot {betSpot.Type}.");
     }
 
     private Vector3 GetDragStartWorldPosition()

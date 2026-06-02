@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 /// <summary>
@@ -58,6 +59,7 @@ public sealed class DeterministicNumpad : MonoBehaviour
 
     public int SelectedNumber { get; private set; } = -1;
 
+    private readonly Dictionary<Button, UnityAction> _numberButtonHandlers = new Dictionary<Button, UnityAction>();
     private bool _isEuropeanLayout = true;
 
     private void Awake()
@@ -100,6 +102,8 @@ public sealed class DeterministicNumpad : MonoBehaviour
 
     private void RegisterNumberButtons()
     {
+        UnregisterNumberButtons();
+
         for (int i = 0; i < _numberButtons.Count; i++)
         {
             NumpadButtonEntry entry = _numberButtons[i];
@@ -110,23 +114,31 @@ public sealed class DeterministicNumpad : MonoBehaviour
             }
 
             int selectedValue = entry.Value;
-            entry.Button.onClick.AddListener(() => HandleNumberButtonClicked(selectedValue));
+
+            if (_numberButtonHandlers.ContainsKey(entry.Button))
+            {
+                continue;
+            }
+
+            UnityAction clickHandler = () => HandleNumberButtonClicked(selectedValue);
+            _numberButtonHandlers.Add(entry.Button, clickHandler);
+            entry.Button.onClick.AddListener(clickHandler);
         }
     }
 
     private void UnregisterNumberButtons()
     {
-        for (int i = 0; i < _numberButtons.Count; i++)
+        foreach (KeyValuePair<Button, UnityAction> handlerEntry in _numberButtonHandlers)
         {
-            NumpadButtonEntry entry = _numberButtons[i];
-
-            if (entry == null || entry.Button == null)
+            if (handlerEntry.Key == null)
             {
                 continue;
             }
 
-            entry.Button.onClick.RemoveAllListeners();
+            handlerEntry.Key.onClick.RemoveListener(handlerEntry.Value);
         }
+
+        _numberButtonHandlers.Clear();
     }
 
     private void RegisterRandomButton()

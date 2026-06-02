@@ -1,66 +1,80 @@
 # RouletteGame
 
-Deterministic Roulette case project built in Unity 6000 with a modular, SOLID-oriented architecture.
+Deterministic Roulette prototype built with Unity 6000 and C# for the Joker Games Unity case.
 
-## Current Architecture
+## Gameplay
 
-The project is organized to keep responsibilities separated and to avoid a `GameContext` or any manager becoming a God Object.
+- Start from the main menu and choose European or American mode.
+- Drag 3D chips from the tray onto the roulette table betting spots.
+- Right-click a placed chip to return it to the tray.
+- Open the deterministic number panel and select the next result, or choose Random.
+- Press Spin to play the round.
+- The wheel and ball animate toward the selected result, then payouts are calculated and the next betting round begins.
+
+## Implemented Case Features
+
+- Deterministic outcome selection with a UI number pad.
+- Random outcome fallback when no number is selected.
+- 3D roulette wheel, table, ball, chips, and drag-and-drop chip placement.
+- Inside bets: Straight, Split, Street, Corner, Six Line.
+- Outside bets: Red/Black, Even/Odd, High/Low, Dozens, Columns.
+- Payout table via `RoulettePayoutSO`.
+- Multi-round flow: Initialize -> Betting -> Spinning -> Result -> Betting.
+- Player statistics: total spins, total wins, total wagered, total won, and net profit.
+- JSON persistence for balance, statistics, roulette type, active bets, and pending spin target.
+- Audio feedback for wheel, ball, chip placement, and round result.
+- Visual highlighting for covered numbers while hovering bet spots.
+
+## Current Limitations
+
+- American roulette UI mode exists, but the table/wheel content is still effectively European; double-zero needs full table and wheel integration.
+- There is no celebratory particle/VFX pass yet.
+- A demo video link still needs to be added before final delivery.
+- Automated gameplay tests are not included; verification is currently build/manual play based.
+
+## Architecture
+
+The project is organized by gameplay responsibility:
 
 ```text
 Assets/Scripts
-├── Core
-│   ├── Persistence
-│   │   ├── PlayerData.cs
-│   │   └── SaveLoadManager.cs
-│   └── StateMachine
-│       ├── GameContext.cs
-│       ├── GameStateBase.cs
-│       ├── IGameState.cs
-│       ├── StateMachine.cs
-│       └── States
-│           ├── InitializeState.cs
-│           ├── BettingState.cs
-│           ├── SpinningState.cs
-│           ├── ResolutionState.cs
-│           └── ResultState.cs
-├── Gameplay
-│   └── RoundFlow
-├── Betting
-├── Roulette
-├── UI
-├── Presentation
-├── Persistence
-├── Data
-│   ├── Runtime
-│   └── SaveData
-└── Infrastructure
+|-- Betting
+|   |-- BetManager.cs
+|   |-- RoulettePayoutSO.cs
+|   |-- Chips
+|   `-- Spots
+|-- Core
+|   `-- StateMachine
+|-- Data
+|   `-- SaveData
+|-- Gameplay
+|   `-- RoundFlow/States
+|-- Persistence
+|-- Presentation
+|-- Roulette
+`-- UI
 ```
 
-## Folder Responsibilities
+## Design Patterns
 
-- `Core`: Current working foundation. The standalone `StateMachine`, scene `GameContext`, active states, and current persistence classes live here.
-- `Gameplay`: Round and game flow orchestration. As the project grows, roulette round states can be promoted here from `Core`.
-- `Betting`: Bet definitions, bet placement, chip selection, bet validation, and payout input models.
-- `Roulette`: Wheel numbers, table rules, deterministic spin requests, and roulette-mode specific rule logic.
-- `UI`: Unity UI presenters, views, panels, buttons, and screen bindings.
-- `Presentation`: VFX, SFX triggers, animations, highlights, and other player-facing feedback layers.
-- `Persistence`: Planned home for save/load services, serializers, and future resume-session logic.
-- `Data/SaveData`: Planned home for serializable persisted models such as player statistics and settings.
-- `Data/Runtime`: Non-persistent runtime session models such as active bets, current round snapshot, and pending spin requests.
-- `Infrastructure`: Bootstrap, installers, scene loading, input adapters, and other framework-facing utilities if needed later.
+- State: `StateMachine`, `InitializeState`, `BettingState`, `SpinningState`, and `ResultState` isolate round phases.
+- Observer/Event: UI controllers, wheel events, and bet total changes communicate through C# events.
+- ScriptableObject data: payout rules and roulette number color data are configured outside gameplay code.
+- Composition root: `GameContext` owns scene references and wires the active flow without embedding betting or wheel logic.
+- Model/View separation: `PlayerData` stores persisted state while UI controllers only present and trigger actions.
 
-## Why This Fits The Case
+## Build Notes
 
-- The case naturally maps to a round-based flow: `Initialize -> Betting -> Spinning -> Result -> Betting`.
-- Deterministic roulette needs a clean separation between round flow, betting rules, and wheel outcome selection.
-- Save/load is optional in the brief, but player statistics persistence is required, so `Persistence` and `Data/SaveData` are already split out.
-- Visual polish is important in the case, so `Presentation` stays separate from core gameplay logic.
+- Unity version target: 6000.0.x.
+- No third-party gameplay plugins or tween libraries are used.
+- Main scene: `Assets/Scenes/SCE_Game.unity`.
 
-## Next Recommended Steps
+## Verification
 
-1. Add `RoundSessionData` under `Data/Runtime` for active bets, selected deterministic outcome, and latest spin result.
-2. Create `BetDefinition`, `BetSlip`, and `BetManager` under `Betting`.
-3. Create roulette rule models under `Roulette` for European/American layout support.
-4. Add UI panels for deterministic outcome selection, betting controls, and statistics display under `UI`.
-5. Move persistence and round state scripts into their planned folders after Unity regenerates project files cleanly.
-6. Expand persistence to support optional resume state if the scope allows it.
+Last checked locally:
+
+```powershell
+dotnet build RouletteGame.slnx
+```
+
+Result: build succeeded with 0 warnings and 0 errors.
