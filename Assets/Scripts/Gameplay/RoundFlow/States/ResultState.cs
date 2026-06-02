@@ -9,6 +9,7 @@ public sealed class ResultState : GameStateBase
 {
     private const float ResultRevealDelay = 1f;
     private const float ResultDisplayDuration = 3f;
+    private const float ResultHoldAfterSettlement = 1f;
 
     private readonly int _winningNumber;
     private Coroutine _returnToBettingCoroutine;
@@ -23,6 +24,7 @@ public sealed class ResultState : GameStateBase
     {
         LogLifecycle($"Enter - Winning Number: {_winningNumber}");
         Context.WinVfxController?.StopAndClear();
+        Context.SettlementVfxController?.StopAndClear();
 
         float totalBet = Context.BetManager != null
             ? Context.BetManager.TotalBet
@@ -53,7 +55,7 @@ public sealed class ResultState : GameStateBase
             Debug.LogError("ResultState could not persist winnings because PlayerData is missing.");
         }
 
-        _returnToBettingCoroutine = Context.StartCoroutine(ReturnToBettingAfterDelay(roundResult));
+        _returnToBettingCoroutine = Context.StartCoroutine(ReturnToBettingAfterDelay(roundResult, amountWon));
     }
 
     public override void Tick()
@@ -71,10 +73,11 @@ public sealed class ResultState : GameStateBase
         Context.BetManager?.ClearTableBets();
         Context.ResultUIController?.Hide();
         Context.WinVfxController?.StopAndClear();
+        Context.SettlementVfxController?.StopAndClear();
         LogLifecycle("Exit");
     }
 
-    private IEnumerator ReturnToBettingAfterDelay(float roundResult)
+    private IEnumerator ReturnToBettingAfterDelay(float roundResult, float amountWon)
     {
         yield return new WaitForSeconds(ResultRevealDelay);
 
@@ -98,7 +101,23 @@ public sealed class ResultState : GameStateBase
             }
         }
 
-        yield return new WaitForSeconds(ResultDisplayDuration);
+        if (Context.ResultUIController != null)
+        {
+            yield return new WaitForSeconds(ResultDisplayDuration);
+            Context.ResultUIController.Hide();
+            Context.WinVfxController?.StopAndClear();
+        }
+
+        if (Context.SettlementVfxController != null)
+        {
+            yield return Context.SettlementVfxController.PlaySettlement(
+                roundResult,
+                amountWon,
+                Context.BetManager != null ? Context.BetManager.ActiveBets : null,
+                Context.ChipManager);
+        }
+
+        yield return new WaitForSeconds(ResultHoldAfterSettlement);
 
         _returnToBettingCoroutine = null;
         StateMachine.ChangeState(new BettingState(Context, StateMachine));

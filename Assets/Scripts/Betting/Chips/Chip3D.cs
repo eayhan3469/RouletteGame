@@ -167,6 +167,35 @@ public sealed class Chip3D : MonoBehaviour
         _isTrayChip = false;
     }
 
+    public void PrepareForSettlement()
+    {
+        if (_returnToOriginCoroutine != null)
+        {
+            StopCoroutine(_returnToOriginCoroutine);
+            _returnToOriginCoroutine = null;
+        }
+
+        if (_settleCoroutine != null)
+        {
+            StopCoroutine(_settleCoroutine);
+            _settleCoroutine = null;
+        }
+
+        if (_activeDraggedChip == this)
+        {
+            _activeDraggedChip = null;
+        }
+
+        _isDragging = false;
+        _assignedBetSpot = null;
+        _dragOriginBetSpot = null;
+        _traySourceSlot = null;
+        _isTrayChip = false;
+        ClearHoveredSpot();
+        SetCollidersEnabled(false);
+        enabled = false;
+    }
+
     private void TryBeginDrag(Vector2 screenPosition)
     {
         if (_activeDraggedChip != null)

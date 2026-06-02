@@ -5643,6 +5643,7 @@ Transform:
   - {fileID: 100100011}
   - {fileID: 100100021}
   - {fileID: 100100031}
+  - {fileID: 100101001}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &100100010
@@ -5656,6 +5657,7 @@ GameObject:
   - component: {fileID: 100100011}
   - component: {fileID: 100100012}
   - component: {fileID: 100100013}
+  - component: {fileID: 100100014}
   m_Layer: 0
   m_Name: GameContext
   m_TagString: Untagged
@@ -5698,7 +5700,8 @@ MonoBehaviour:
   _resultUIController: {fileID: 510030014}
   _statisticsUIController: {fileID: 800100004}
   _audioFeedbackController: {fileID: 100100013}
-  _winVfxController: {fileID: 0}
+  _winVfxController: {fileID: 942255794}
+  _settlementVfxController: {fileID: 100100014}
   _defaultStartingBalance: 1000
   _chipManager: {fileID: 100200042}
   _betManager: {fileID: 100100022}
@@ -5745,6 +5748,36 @@ MonoBehaviour:
   _winResultClip: {fileID: 0}
   _loseResultClip: {fileID: 0}
   _neutralResultClip: {fileID: 0}
+--- !u!114 &100100014
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100100010}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f0234096f0849b4a9edcc90f07036c3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _winChipSpawnPoint: {fileID: 100101011}
+  _playerChipStackTarget: {fileID: 100101021}
+  _dealerChipCollectTarget: {fileID: 100101031}
+  _winSettlementStartDelay: 1.2
+  _minRewardChipCount: 6
+  _maxRewardChipCount: 18
+  _winAmountForMaxRewardChips: 1500
+  _rewardChipStagger: 0.055
+  _rewardChipTravelDuration: 0.68
+  _rewardChipArcHeight: 2.2
+  _rewardStackPulseScale: 1.08
+  _rewardStackPulseDuration: 0.18
+  _loseChipStagger: 0.08
+  _loseChipTravelDuration: 0.62
+  _loseChipArcHeight: 1.25
+  _dealerTargetScatterRadius: 0.35
+  _minChipSpinDegrees: 180
+  _maxChipSpinDegrees: 540
 --- !u!1 &100100020
 GameObject:
   m_ObjectHideFlags: 0
@@ -5868,6 +5901,133 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 100100001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &100101000
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 100101001}
+  m_Layer: 0
+  m_Name: SettlementAnchors
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &100101001
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100101000}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 100101011}
+  - {fileID: 100101021}
+  - {fileID: 100101031}
+  m_Father: {fileID: 100100001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &100101010
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 100101011}
+  m_Layer: 0
+  m_Name: WinChipSpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &100101011
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100101010}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 14.01, y: 11.2, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 100101001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &100101020
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 100101021}
+  m_Layer: 0
+  m_Name: PlayerChipStackTarget
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &100101021
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100101020}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 21, y: 1.8, z: -7.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 100101001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &100101030
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 100101031}
+  m_Layer: 0
+  m_Name: DealerChipCollectTarget
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &100101031
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100101030}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 21, y: 2, z: 7.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 100101001}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &100200000
 GameObject:
@@ -6250,25 +6410,25 @@ MonoBehaviour:
     TraySlot: {fileID: 559856763}
   _chipVisualDefinitions:
   - ChipValue: 5
-    BodyColor: {r: 0.93, g: 0.93, b: 0.93, a: 1}
+    BodyColor: {r: 0.9716981, g: 0.97169477, b: 0.8204432, a: 1}
     StripeColor: {r: 0.13705944, g: 0.23978105, b: 0.8301887, a: 1}
-    TextColor: {r: 0.16037738, g: 0.16037738, b: 0.16037738, a: 1}
+    TextColor: {r: 0.13725491, g: 0.23921569, b: 0.83137256, a: 1}
   - ChipValue: 10
-    BodyColor: {r: 0.92941177, g: 0.92941177, b: 0.92941177, a: 1}
+    BodyColor: {r: 0.972549, g: 0.972549, b: 0.81960785, a: 1}
     StripeColor: {r: 0.25430277, g: 0.6698113, b: 0.12953897, a: 1}
-    TextColor: {r: 0.16078432, g: 0.16078432, b: 0.16078432, a: 1}
+    TextColor: {r: 0.25490198, g: 0.67058825, b: 0.12941177, a: 1}
   - ChipValue: 25
-    BodyColor: {r: 0.92941177, g: 0.92941177, b: 0.92941177, a: 1}
+    BodyColor: {r: 0.972549, g: 0.972549, b: 0.81960785, a: 1}
     StripeColor: {r: 0.45098042, g: 0, b: 0.29411766, a: 1}
-    TextColor: {r: 0.16078432, g: 0.16078432, b: 0.16078432, a: 1}
+    TextColor: {r: 0.4509804, g: 0, b: 0.29411766, a: 1}
   - ChipValue: 50
-    BodyColor: {r: 0.92941177, g: 0.92941177, b: 0.92941177, a: 1}
+    BodyColor: {r: 0.972549, g: 0.972549, b: 0.81960785, a: 1}
     StripeColor: {r: 0, g: 0, b: 0, a: 1}
-    TextColor: {r: 0.16078432, g: 0.16078432, b: 0.16078432, a: 1}
+    TextColor: {r: 0, g: 0, b: 0, a: 1}
   - ChipValue: 100
-    BodyColor: {r: 0.92941177, g: 0.92941177, b: 0.92941177, a: 1}
+    BodyColor: {r: 0.972549, g: 0.972549, b: 0.81960785, a: 1}
     StripeColor: {r: 0.9960785, g: 0, b: 0, a: 1}
-    TextColor: {r: 0.16078432, g: 0.16078432, b: 0.16078432, a: 1}
+    TextColor: {r: 0.99607843, g: 0, b: 0, a: 1}
   _chipThickness: 0.08
   _clearExistingStacksBeforeSpawn: 1
 --- !u!1 &100200050

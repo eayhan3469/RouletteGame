@@ -186,6 +186,141 @@ public sealed class ChipManager : MonoBehaviour
         return spawnedChip;
     }
 
+    public Chip3D SpawnVisualChip(int chipValue, Vector3 worldPosition, Transform parent)
+    {
+        if (_chipPrefab == null)
+        {
+            Debug.LogError("ChipManager could not spawn a visual chip because no chip prefab is assigned.");
+            return null;
+        }
+
+        ChipVisualDefinition visualDefinition = GetChipVisualDefinition(chipValue);
+        Chip3D spawnedChip = Instantiate(_chipPrefab, worldPosition, Quaternion.identity, parent);
+        spawnedChip.Initialize(
+            chipValue,
+            visualDefinition.BodyColor,
+            visualDefinition.StripeColor,
+            visualDefinition.TextColor);
+        spawnedChip.AssignTraySource(null, null);
+        spawnedChip.PrepareForSettlement();
+        return spawnedChip;
+    }
+
+    public int GetRepresentativeChipValue(float amount)
+    {
+        List<ChipTraySlot> orderedSlots = GetOrderedTraySlots();
+
+        for (int i = 0; i < orderedSlots.Count; i++)
+        {
+            ChipTraySlot chipTraySlot = orderedSlots[i];
+
+            if (chipTraySlot != null && amount >= chipTraySlot.ChipValue)
+            {
+                return chipTraySlot.ChipValue;
+            }
+        }
+
+        return orderedSlots.Count > 0 && orderedSlots[orderedSlots.Count - 1] != null
+            ? orderedSlots[orderedSlots.Count - 1].ChipValue
+            : 5;
+    }
+
+    public List<int> CreateRewardChipValueDistribution(float amount, int maxVisualChipCount)
+    {
+        int remainingAmount = Mathf.RoundToInt(amount);
+        List<int> rewardChipValues = new List<int>();
+
+        if (remainingAmount <= 0)
+        {
+            return rewardChipValues;
+        }
+
+        List<ChipTraySlot> orderedSlots = GetOrderedTraySlots();
+
+        if (orderedSlots.Count == 0)
+        {
+            rewardChipValues.Add(5);
+            return rewardChipValues;
+        }
+
+        int maxChipCount = Mathf.Max(1, maxVisualChipCount);
+        int primaryMaxChipValue = GetHighestAffordableChipValue(orderedSlots, Mathf.Max(1, remainingAmount / 2));
+
+        if (primaryMaxChipValue <= 0)
+        {
+            primaryMaxChipValue = GetHighestAffordableChipValue(orderedSlots, remainingAmount);
+        }
+
+        AddLimitedRewardChips(orderedSlots, primaryMaxChipValue, maxChipCount, rewardChipValues, ref remainingAmount);
+        AddGreedyRewardChips(orderedSlots, maxChipCount, rewardChipValues, ref remainingAmount);
+
+        if (remainingAmount > 0 && rewardChipValues.Count == 0)
+        {
+            rewardChipValues.Add(GetRepresentativeChipValue(remainingAmount));
+        }
+
+        ShuffleRewardChipValues(rewardChipValues);
+        return rewardChipValues;
+    }
+
+    public bool TryGetChipStackTarget(out Vector3 targetPosition)
+    {
+        Vector3 totalPosition = Vector3.zero;
+        int validSlotCount = 0;
+
+        for (int i = 0; i < _chipTraySlots.Count; i++)
+        {
+            ChipTraySlot chipTraySlot = _chipTraySlots[i];
+
+            if (chipTraySlot == null || chipTraySlot.TraySlot == null)
+            {
+                continue;
+            }
+
+            totalPosition += chipTraySlot.TraySlot.position;
+            validSlotCount++;
+        }
+
+        if (validSlotCount <= 0)
+        {
+            targetPosition = default;
+            return false;
+        }
+
+        targetPosition = (totalPosition / validSlotCount) + (Vector3.up * 0.5f);
+        return true;
+    }
+
+    public bool TryGetChipStackTarget(int chipValue, out Vector3 targetPosition, out Transform stackTransform)
+    {
+        TrayStackState trayStackState = GetTrayStackStateForChipValue(chipValue);
+
+        if (trayStackState != null && trayStackState.TraySlot != null)
+        {
+            stackTransform = trayStackState.TraySlot;
+            targetPosition = GetTraySlotTargetPosition(trayStackState.TraySlot);
+            return true;
+        }
+
+        for (int i = 0; i < _chipTraySlots.Count; i++)
+        {
+            ChipTraySlot chipTraySlot = _chipTraySlots[i];
+
+            if (chipTraySlot == null || chipTraySlot.TraySlot == null || chipTraySlot.ChipValue != chipValue)
+            {
+                continue;
+            }
+
+            stackTransform = chipTraySlot.TraySlot;
+            targetPosition = GetTraySlotTargetPosition(chipTraySlot.TraySlot);
+            return true;
+        }
+
+        stackTransform = null;
+        targetPosition = default;
+        return false;
+    }
+
     private List<ChipStackInstruction> CalculateChipDistribution(int balance)
     {
         List<ChipStackInstruction> instructions = new List<ChipStackInstruction>();
@@ -222,6 +357,83 @@ public sealed class ChipManager : MonoBehaviour
         }
 
         return instructions;
+    }
+
+    private void AddLimitedRewardChips(
+        List<ChipTraySlot> orderedSlots,
+        int primaryMaxChipValue,
+        int maxChipCount,
+        List<int> rewardChipValues,
+        ref int remainingAmount)
+    {
+        for (int i = 0; i < orderedSlots.Count; i++)
+        {
+            ChipTraySlot chipTraySlot = orderedSlots[i];
+
+            if (chipTraySlot == null ||
+                chipTraySlot.ChipValue <= 0 ||
+                chipTraySlot.ChipValue > primaryMaxChipValue)
+            {
+                continue;
+            }
+
+            int addedForValue = 0;
+
+            while (remainingAmount >= chipTraySlot.ChipValue &&
+                   addedForValue < 2 &&
+                   rewardChipValues.Count < maxChipCount)
+            {
+                rewardChipValues.Add(chipTraySlot.ChipValue);
+                remainingAmount -= chipTraySlot.ChipValue;
+                addedForValue++;
+            }
+        }
+    }
+
+    private void AddGreedyRewardChips(
+        List<ChipTraySlot> orderedSlots,
+        int maxChipCount,
+        List<int> rewardChipValues,
+        ref int remainingAmount)
+    {
+        while (remainingAmount > 0 && rewardChipValues.Count < maxChipCount)
+        {
+            int chipValue = GetHighestAffordableChipValue(orderedSlots, remainingAmount);
+
+            if (chipValue <= 0)
+            {
+                break;
+            }
+
+            rewardChipValues.Add(chipValue);
+            remainingAmount -= chipValue;
+        }
+    }
+
+    private int GetHighestAffordableChipValue(List<ChipTraySlot> orderedSlots, int amount)
+    {
+        for (int i = 0; i < orderedSlots.Count; i++)
+        {
+            ChipTraySlot chipTraySlot = orderedSlots[i];
+
+            if (chipTraySlot != null && chipTraySlot.ChipValue > 0 && chipTraySlot.ChipValue <= amount)
+            {
+                return chipTraySlot.ChipValue;
+            }
+        }
+
+        return 0;
+    }
+
+    private void ShuffleRewardChipValues(List<int> rewardChipValues)
+    {
+        for (int i = rewardChipValues.Count - 1; i > 0; i--)
+        {
+            int swapIndex = UnityEngine.Random.Range(0, i + 1);
+            int value = rewardChipValues[i];
+            rewardChipValues[i] = rewardChipValues[swapIndex];
+            rewardChipValues[swapIndex] = value;
+        }
     }
 
     private void SpawnAndStackChips(List<ChipStackInstruction> instructions)
@@ -456,6 +668,11 @@ public sealed class ChipManager : MonoBehaviour
         }
 
         return null;
+    }
+
+    private Vector3 GetTraySlotTargetPosition(Transform traySlot)
+    {
+        return traySlot.position + (Vector3.up * 0.5f);
     }
 
     private void SpawnVisibleChip(TrayStackState trayStackState)
