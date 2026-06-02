@@ -36,6 +36,9 @@ public sealed class GameContext : MonoBehaviour
     [SerializeField]
     private RouletteAudioFeedbackController _audioFeedbackController;
 
+    [SerializeField]
+    private RouletteWinVfxController _winVfxController;
+
     [Header("Bootstrap")]
     [SerializeField]
     [Min(0f)]
@@ -59,6 +62,7 @@ public sealed class GameContext : MonoBehaviour
     public ResultUIController ResultUIController => _resultUIController;
     public StatisticsUIController StatisticsUIController => _statisticsUIController;
     public RouletteAudioFeedbackController AudioFeedbackController => _audioFeedbackController;
+    public RouletteWinVfxController WinVfxController => _winVfxController;
     public float DefaultStartingBalance => _defaultStartingBalance;
     public ChipManager ChipManager => _chipManager;
     public BetManager BetManager => _betManager;
@@ -68,6 +72,7 @@ public sealed class GameContext : MonoBehaviour
     private void Awake()
     {
         EnsureAudioFeedbackController();
+        EnsureWinVfxController();
         _stateMachine = new StateMachine();
     }
 
@@ -110,6 +115,31 @@ public sealed class GameContext : MonoBehaviour
         {
             _audioFeedbackController = gameObject.AddComponent<RouletteAudioFeedbackController>();
         }
+    }
+
+    private void EnsureWinVfxController()
+    {
+        if (_winVfxController != null)
+        {
+            _winVfxController.StopAndClear();
+            return;
+        }
+
+        GameObject winVfxRoot = GameObject.Find("VFX_Win");
+
+        if (winVfxRoot == null)
+        {
+            return;
+        }
+
+        _winVfxController = winVfxRoot.GetComponent<RouletteWinVfxController>();
+
+        if (_winVfxController == null)
+        {
+            _winVfxController = winVfxRoot.AddComponent<RouletteWinVfxController>();
+        }
+
+        _winVfxController.StopAndClear();
     }
 
     public void SetBettingUiVisible(bool isVisible)

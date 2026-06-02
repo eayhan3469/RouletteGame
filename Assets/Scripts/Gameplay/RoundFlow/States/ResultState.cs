@@ -22,6 +22,7 @@ public sealed class ResultState : GameStateBase
     public override void Enter()
     {
         LogLifecycle($"Enter - Winning Number: {_winningNumber}");
+        Context.WinVfxController?.StopAndClear();
 
         float totalBet = Context.BetManager != null
             ? Context.BetManager.TotalBet
@@ -69,6 +70,7 @@ public sealed class ResultState : GameStateBase
 
         Context.BetManager?.ClearTableBets();
         Context.ResultUIController?.Hide();
+        Context.WinVfxController?.StopAndClear();
         LogLifecycle("Exit");
     }
 
@@ -80,10 +82,20 @@ public sealed class ResultState : GameStateBase
         {
             Context.AudioFeedbackController?.PlayRoundResult(roundResult);
             Context.ResultUIController.ShowResult(roundResult, _winningNumber);
+
+            if (roundResult > 0f)
+            {
+                Context.WinVfxController?.PlayWinSequence();
+            }
         }
         else
         {
             Debug.LogWarning("ResultState is missing the ResultUIController reference.");
+
+            if (roundResult > 0f)
+            {
+                Context.WinVfxController?.PlayWinSequence();
+            }
         }
 
         yield return new WaitForSeconds(ResultDisplayDuration);
