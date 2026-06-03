@@ -5,7 +5,7 @@ using UnityEngine.UI;
 /// <summary>
 /// Controls the main menu interactions before the game enters the betting flow.
 /// Uses standard Unity UI components and exposes a simple play event with the
-/// selected roulette type.
+/// selected roulette variant.
 /// </summary>
 public sealed class MainMenuController : MonoBehaviour
 {
@@ -19,7 +19,7 @@ public sealed class MainMenuController : MonoBehaviour
     [SerializeField]
     private Toggle _europeanRouletteToggle;
 
-    public event Action<bool> PlayButtonClicked;
+    public event Action<RouletteVariant> PlayButtonClicked;
     public event Action ClearSaveButtonClicked;
 
     private void Awake()
@@ -37,7 +37,7 @@ public sealed class MainMenuController : MonoBehaviour
     /// <summary>
     /// Applies the persisted roulette mode to the menu so the UI reflects the current save data.
     /// </summary>
-    public void SetSelectedRouletteType(bool isEuropeanRoulette)
+    public void SetSelectedRouletteType(RouletteVariant rouletteVariant)
     {
         if (_europeanRouletteToggle == null)
         {
@@ -45,7 +45,7 @@ public sealed class MainMenuController : MonoBehaviour
             return;
         }
 
-        _europeanRouletteToggle.isOn = isEuropeanRoulette;
+        _europeanRouletteToggle.isOn = rouletteVariant == RouletteVariant.European;
     }
 
     public void SetClearSaveButtonInteractable(bool isInteractable)
@@ -61,8 +61,10 @@ public sealed class MainMenuController : MonoBehaviour
 
     private void HandlePlayButtonClicked()
     {
-        bool isEuropeanRoulette = _europeanRouletteToggle == null || _europeanRouletteToggle.isOn;
-        PlayButtonClicked?.Invoke(isEuropeanRoulette);
+        RouletteVariant selectedVariant = _europeanRouletteToggle == null || _europeanRouletteToggle.isOn
+            ? RouletteVariant.European
+            : RouletteVariant.American;
+        PlayButtonClicked?.Invoke(selectedVariant);
     }
 
     private void HandleClearSaveButtonClicked()

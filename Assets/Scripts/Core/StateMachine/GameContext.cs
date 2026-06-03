@@ -49,6 +49,9 @@ public sealed class GameContext : MonoBehaviour
 
     [Header("Gameplay")]
     [SerializeField]
+    private TableVariantLoader _tableVariantLoader;
+
+    [SerializeField]
     private ChipManager _chipManager;
 
     [SerializeField]
@@ -68,11 +71,14 @@ public sealed class GameContext : MonoBehaviour
     public RouletteWinVfxController WinVfxController => _winVfxController;
     public RouletteSettlementVfxController SettlementVfxController => _settlementVfxController;
     public float DefaultStartingBalance => _defaultStartingBalance;
+    public TableVariantLoader TableVariantLoader => _tableVariantLoader;
     public ChipManager ChipManager => _chipManager;
     public BetManager BetManager => _betManager;
     public WheelController WheelController => _wheelController;
     public bool IsChipInteractionEnabled { get; private set; }
+    public GameSaveData SaveData { get; private set; }
     public PlayerData PlayerData { get; private set; }
+    public RouletteVariant ActiveRouletteVariant { get; private set; } = RouletteVariant.European;
 
     private void Awake()
     {
@@ -103,9 +109,61 @@ public sealed class GameContext : MonoBehaviour
         _mainMenuPanel.SetActive(isVisible);
     }
 
+    public void SetSaveData(GameSaveData saveData)
+    {
+        SaveData = saveData ?? new GameSaveData();
+        SaveData.EnsureProfiles();
+    }
+
     public void SetPlayerData(PlayerData playerData)
     {
         PlayerData = playerData;
+    }
+
+    public void SetActiveProfile(RouletteVariant variant)
+    {
+        if (SaveData == null)
+        {
+            SetSaveData(new GameSaveData());
+        }
+
+        ActiveRouletteVariant = variant;
+        SaveData.LastSelectedVariant = variant;
+        PlayerData = SaveData.GetProfile(variant);
+    }
+
+    public bool LoadTableVariant(RouletteVariant variant)
+    {
+        ActiveRouletteVariant = variant;
+
+        if (_tableVariantLoader == null)
+        {
+            _tableVariantLoader = FindFirstObjectByType<TableVariantLoader>();
+        }
+
+        if (_tableVariantLoader == null)
+        {
+            return _betManager != null && _wheelController != null;
+        }
+
+        RouletteTableVariant tableVariant = _tableVariantLoader.LoadVariant(variant);
+
+        if (tableVariant == null)
+        {
+            return _betManager != null && _wheelController != null;
+        }
+
+        if (tableVariant.BetManager != null)
+        {
+            _betManager = tableVariant.BetManager;
+        }
+
+        if (tableVariant.WheelController != null)
+        {
+            _wheelController = tableVariant.WheelController;
+        }
+
+        return _betManager != null && _wheelController != null;
     }
 
     public void SetChipInteractionEnabled(bool isEnabled)
@@ -206,7 +264,7 @@ public sealed class GameContext : MonoBehaviour
         PlayerData.SavedBets = _betManager != null
             ? _betManager.CreateSavedBetsSnapshot()
             : new System.Collections.Generic.List<PlayerData.SavedBetData>();
-        SaveLoadManager.Save(PlayerData);
+        SaveActiveGameData();
     }
 
     public void SavePendingSpinBets(int pendingSpinTargetNumber)
@@ -221,7 +279,7 @@ public sealed class GameContext : MonoBehaviour
         PlayerData.SavedBets = _betManager != null
             ? _betManager.CreateSavedBetsSnapshot()
             : new System.Collections.Generic.List<PlayerData.SavedBetData>();
-        SaveLoadManager.Save(PlayerData);
+        SaveActiveGameData();
     }
 
     public void ClearPendingSpinBets()
@@ -234,5 +292,16 @@ public sealed class GameContext : MonoBehaviour
         PlayerData.SavedRoundPhase = PlayerData.RoundPhase.None;
         PlayerData.PendingSpinTargetNumber = -1;
         PlayerData.SavedBets = new System.Collections.Generic.List<PlayerData.SavedBetData>();
+    }
+
+    public void SaveActiveGameData()
+    {
+        if (SaveData == null)
+        {
+            SetSaveData(new GameSaveData());
+        }
+
+        SaveData.LastSelectedVariant = ActiveRouletteVariant;
+        SaveLoadManager.Save(SaveData);
     }
 }

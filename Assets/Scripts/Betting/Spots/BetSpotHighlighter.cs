@@ -25,7 +25,7 @@ public sealed class BetSpotHighlighter : MonoBehaviour
         }
 
         Hide();
-        EnsureStraightNumberSpotCache();
+        RebuildStraightNumberSpotCache();
         TryActivateSpot(betSpot);
         TryActivateCoveredNumberSpots(betSpot);
     }
@@ -45,17 +45,12 @@ public sealed class BetSpotHighlighter : MonoBehaviour
 
     private void Awake()
     {
-        EnsureStraightNumberSpotCache();
         Hide();
     }
 
-    private void EnsureStraightNumberSpotCache()
+    private void RebuildStraightNumberSpotCache()
     {
-        if (_straightNumberSpots.Count > 0)
-        {
-            return;
-        }
-
+        _straightNumberSpots.Clear();
         BetSpot[] betSpots = FindObjectsByType<BetSpot>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
 
         for (int i = 0; i < betSpots.Length; i++)

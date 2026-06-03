@@ -80,8 +80,9 @@ public sealed class DeterministicNumpad : MonoBehaviour
     /// Configures the numpad for the selected roulette type.
     /// European mode hides the double-zero button and resets the current selection to Random.
     /// </summary>
-    public void InitializeNumpad(bool isEuropean)
+    public void InitializeNumpad(RouletteVariant rouletteVariant)
     {
+        bool isEuropean = rouletteVariant == RouletteVariant.European;
         _isEuropeanLayout = isEuropean;
 
         NumpadButtonEntry doubleZeroEntry = GetEntryByValue(DoubleZeroValue);

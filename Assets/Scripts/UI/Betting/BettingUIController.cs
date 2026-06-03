@@ -42,11 +42,11 @@ public sealed class BettingUIController : MonoBehaviour
         UnregisterMenuButton();
     }
 
-    public void Initialize(bool isEuropean, float balance, float totalBet)
+    public void Initialize(RouletteVariant rouletteVariant, float balance, float totalBet)
     {
         if (_deterministicNumpad != null)
         {
-            _deterministicNumpad.InitializeNumpad(isEuropean);
+            _deterministicNumpad.InitializeNumpad(rouletteVariant);
         }
         else
         {

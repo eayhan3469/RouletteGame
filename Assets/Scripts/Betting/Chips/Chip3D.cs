@@ -100,9 +100,9 @@ public sealed class Chip3D : MonoBehaviour
     {
         CacheReferencesIfNeeded();
         _colliders = GetComponentsInChildren<Collider>();
-        _betManager = FindFirstObjectByType<BetManager>();
-        _betSpotHighlighter = FindFirstObjectByType<BetSpotHighlighter>();
         _gameContext = FindFirstObjectByType<GameContext>();
+        _betManager = ResolveActiveBetManager();
+        _betSpotHighlighter = FindFirstObjectByType<BetSpotHighlighter>();
     }
 
     private void Update()
@@ -252,7 +252,7 @@ public sealed class Chip3D : MonoBehaviour
         if (_dragOriginBetSpot != null)
         {
             _dragOriginBetSpot.UnregisterChip(this);
-            _betManager?.UnregisterBet(this);
+            ResolveActiveBetManager()?.UnregisterBet(this);
             _assignedBetSpot = null;
         }
 
@@ -296,7 +296,7 @@ public sealed class Chip3D : MonoBehaviour
             return;
         }
 
-        _betManager?.UnregisterBet(this);
+        ResolveActiveBetManager()?.UnregisterBet(this);
         _assignedBetSpot = null;
         _dragOriginBetSpot = null;
         ClearHoveredSpot();
@@ -409,7 +409,28 @@ public sealed class Chip3D : MonoBehaviour
             _gameContext = FindFirstObjectByType<GameContext>();
         }
 
-        return _gameContext == null || _gameContext.IsChipInteractionEnabled;
+            return _gameContext == null || _gameContext.IsChipInteractionEnabled;
+    }
+
+    private BetManager ResolveActiveBetManager()
+    {
+        if (_gameContext == null)
+        {
+            _gameContext = FindFirstObjectByType<GameContext>();
+        }
+
+        if (_gameContext != null && _gameContext.BetManager != null)
+        {
+            _betManager = _gameContext.BetManager;
+            return _betManager;
+        }
+
+        if (_betManager == null)
+        {
+            _betManager = FindFirstObjectByType<BetManager>();
+        }
+
+        return _betManager;
     }
 
     private void CancelDragIfInteractionWasDisabled()
@@ -647,7 +668,7 @@ public sealed class Chip3D : MonoBehaviour
         if (_dragOriginBetSpot != null)
         {
             _dragOriginBetSpot.RegisterChip(this);
-            _betManager?.RegisterBet(this, _dragOriginBetSpot);
+            ResolveActiveBetManager()?.RegisterBet(this, _dragOriginBetSpot);
             _assignedBetSpot = _dragOriginBetSpot;
             _dragOriginBetSpot = null;
             _gameContext?.SaveCurrentBettingState();
@@ -687,7 +708,7 @@ public sealed class Chip3D : MonoBehaviour
         transform.localScale = _dragStartLocalScale;
         transform.SetParent(betSpot.transform, true);
         betSpot.RegisterChip(this);
-        _betManager?.RegisterBet(this, betSpot);
+        ResolveActiveBetManager()?.RegisterBet(this, betSpot);
         bool wasTrayChip = _isTrayChip && _traySourceSlot != null;
         MarkPlacedOnBetSpot(betSpot);
 

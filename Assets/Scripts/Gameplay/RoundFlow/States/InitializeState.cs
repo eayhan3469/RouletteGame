@@ -19,18 +19,19 @@ public sealed class InitializeState : GameStateBase
         Context.SetChipInteractionEnabled(false);
 
         bool hasExistingSave = File.Exists(SaveLoadManager.SavePath);
-        PlayerData playerData = SaveLoadManager.Load();
+        GameSaveData saveData = SaveLoadManager.Load();
 
         if (!hasExistingSave)
         {
-            playerData = CreateDefaultPlayerData();
+            saveData = CreateDefaultSaveData();
         }
 
-        Context.SetPlayerData(playerData);
+        Context.SetSaveData(saveData);
+        Context.SetActiveProfile(Context.SaveData.LastSelectedVariant);
 
         if (Context.MainMenuController != null)
         {
-            Context.MainMenuController.SetSelectedRouletteType(Context.PlayerData.IsEuropeanRoulette);
+            Context.MainMenuController.SetSelectedRouletteType(Context.SaveData.LastSelectedVariant);
             Context.MainMenuController.PlayButtonClicked += HandlePlayButtonClicked;
             Context.MainMenuController.ClearSaveButtonClicked += HandleClearSaveButtonClicked;
             Context.MainMenuController.SetClearSaveButtonInteractable(hasExistingSave);
@@ -59,15 +60,27 @@ public sealed class InitializeState : GameStateBase
         LogLifecycle("Exit");
     }
 
-    private void HandlePlayButtonClicked(bool isEuropeanRoulette)
+    private void HandlePlayButtonClicked(RouletteVariant rouletteVariant)
     {
-        if (Context.PlayerData == null)
+        if (Context.SaveData == null)
         {
-            Context.SetPlayerData(CreateDefaultPlayerData());
+            Context.SetSaveData(CreateDefaultSaveData());
         }
 
-        Context.PlayerData.IsEuropeanRoulette = isEuropeanRoulette;
-        SaveLoadManager.Save(Context.PlayerData);
+        bool changedVariant = Context.SaveData.LastSelectedVariant != rouletteVariant;
+        Context.SetActiveProfile(rouletteVariant);
+
+        if (changedVariant && Context.PlayerData != null)
+        {
+            Context.PlayerData.ClearRoundState();
+        }
+
+        if (!Context.LoadTableVariant(rouletteVariant))
+        {
+            UnityEngine.Debug.LogWarning($"InitializeState could not load a table for {rouletteVariant}. Continuing with current scene references.");
+        }
+
+        Context.SaveActiveGameData();
         StateMachine.ChangeState(new BettingState(Context, StateMachine));
     }
 
@@ -78,20 +91,23 @@ public sealed class InitializeState : GameStateBase
             return;
         }
 
-        Context.SetPlayerData(CreateDefaultPlayerData());
+        Context.SetSaveData(CreateDefaultSaveData());
+        Context.SetActiveProfile(Context.SaveData.LastSelectedVariant);
 
         if (Context.MainMenuController != null)
         {
-            Context.MainMenuController.SetSelectedRouletteType(Context.PlayerData.IsEuropeanRoulette);
+            Context.MainMenuController.SetSelectedRouletteType(Context.SaveData.LastSelectedVariant);
             Context.MainMenuController.SetClearSaveButtonInteractable(false);
         }
     }
 
-    private PlayerData CreateDefaultPlayerData()
+    private GameSaveData CreateDefaultSaveData()
     {
-        PlayerData playerData = new PlayerData();
         float startingBalance = Context != null ? Context.DefaultStartingBalance : FallbackStartingBalance;
-        playerData.Balance = startingBalance;
-        return playerData;
+        GameSaveData saveData = new GameSaveData();
+        saveData.LastSelectedVariant = RouletteVariant.European;
+        saveData.EuropeanProfile.Balance = startingBalance;
+        saveData.AmericanProfile.Balance = startingBalance;
+        return saveData;
     }
 }

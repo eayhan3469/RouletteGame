@@ -51,7 +51,7 @@ public sealed class BettingState : GameStateBase
         Context.SetBettingUiVisible(true);
         Context.SetChipInteractionEnabled(true);
         Context.BettingUIController.Initialize(
-            Context.PlayerData != null && Context.PlayerData.IsEuropeanRoulette,
+            Context.ActiveRouletteVariant,
             Context.PlayerData != null ? Context.PlayerData.Balance : 0f,
             Context.BetManager != null ? Context.BetManager.TotalBet : InitialTotalBet);
         Context.StatisticsUIController?.RefreshStats(Context.PlayerData);
@@ -116,11 +116,6 @@ public sealed class BettingState : GameStateBase
 
         Context.ChipManager.ClearTrayChips();
 
-        if (!Context.PlayerData.IsEuropeanRoulette)
-        {
-            UnityEngine.Debug.LogWarning("American roulette is not implemented yet. Using the current European tray setup.");
-        }
-
         int chipBalance = UnityEngine.Mathf.Max(0, UnityEngine.Mathf.FloorToInt(Context.PlayerData.Balance));
         Context.ChipManager.DistributeBalanceToChips(chipBalance);
     }
@@ -159,10 +154,10 @@ public sealed class BettingState : GameStateBase
 
         int pendingTargetNumber = Context.PlayerData.PendingSpinTargetNumber;
 
-        if (!IsValidTargetNumber(pendingTargetNumber, Context.PlayerData.IsEuropeanRoulette))
+        if (!IsValidTargetNumber(pendingTargetNumber, Context.ActiveRouletteVariant))
         {
             Context.ClearPendingSpinBets();
-            SaveLoadManager.Save(Context.PlayerData);
+            Context.SaveActiveGameData();
             return false;
         }
 
@@ -183,7 +178,7 @@ public sealed class BettingState : GameStateBase
             return;
         }
 
-        int resolvedTargetNumber = ResolveTargetNumber(targetNumber, Context.PlayerData.IsEuropeanRoulette);
+        int resolvedTargetNumber = ResolveTargetNumber(targetNumber, Context.ActiveRouletteVariant);
         StateMachine.ChangeState(new SpinningState(Context, StateMachine, resolvedTargetNumber));
     }
 
@@ -193,20 +188,20 @@ public sealed class BettingState : GameStateBase
         StateMachine.ChangeState(new InitializeState(Context, StateMachine));
     }
 
-    private int ResolveTargetNumber(int targetNumber, bool isEuropeanRoulette)
+    private int ResolveTargetNumber(int targetNumber, RouletteVariant rouletteVariant)
     {
-        if (IsValidTargetNumber(targetNumber, isEuropeanRoulette))
+        if (IsValidTargetNumber(targetNumber, rouletteVariant))
         {
             return targetNumber;
         }
 
-        int exclusiveMax = isEuropeanRoulette ? 37 : 38;
+        int exclusiveMax = rouletteVariant == RouletteVariant.European ? 37 : 38;
         return UnityEngine.Random.Range(0, exclusiveMax);
     }
 
-    private bool IsValidTargetNumber(int targetNumber, bool isEuropeanRoulette)
+    private bool IsValidTargetNumber(int targetNumber, RouletteVariant rouletteVariant)
     {
-        int exclusiveMax = isEuropeanRoulette ? 37 : 38;
+        int exclusiveMax = rouletteVariant == RouletteVariant.European ? 37 : 38;
         return targetNumber >= 0 && targetNumber < exclusiveMax;
     }
 }

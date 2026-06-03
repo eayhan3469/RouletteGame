@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 
 /// <summary>
@@ -41,7 +42,7 @@ public sealed class BetSpot : MonoBehaviour
     public BetType Type => _betType;
     public int[] CoveredNumbers => _coveredNumbers;
     public int CurrentChipCount => _currentChipCount;
-    public string SaveId => string.IsNullOrWhiteSpace(_saveId) ? GetHierarchyPath() : _saveId;
+    public string SaveId => string.IsNullOrWhiteSpace(_saveId) ? GetSemanticSaveId() : _saveId;
     public bool IsStraightNumberSpot => _betType == BetType.Straight && _coveredNumbers != null && _coveredNumbers.Length == 1;
     public int StraightNumber => IsStraightNumberSpot ? _coveredNumbers[0] : -1;
     public bool HasNumberHighlightRenderer => _numberHighlightRenderer != null;
@@ -147,18 +148,117 @@ public sealed class BetSpot : MonoBehaviour
         }
     }
 
-    private string GetHierarchyPath()
+    private string GetSemanticSaveId()
     {
-        string path = name;
-        Transform current = transform.parent;
+        int[] sortedNumbers = GetSortedCoveredNumbers();
 
-        while (current != null)
+        if (_betType == BetType.Straight && sortedNumbers.Length == 1)
         {
-            path = $"{current.name}/{path}";
-            current = current.parent;
+            return $"straight_{FormatNumberForSaveId(sortedNumbers[0])}";
         }
 
-        return path;
+        switch (_betType)
+        {
+            case BetType.Dozen:
+                return $"dozen_{ResolveDozenIndex(sortedNumbers)}";
+            case BetType.Column:
+                return $"column_{ResolveColumnIndex(sortedNumbers)}";
+            case BetType.Red:
+                return "red";
+            case BetType.Black:
+                return "black";
+            case BetType.Even:
+                return "even";
+            case BetType.Odd:
+                return "odd";
+            case BetType.Low:
+                return "low";
+            case BetType.High:
+                return "high";
+        }
+
+        if (sortedNumbers.Length == 0)
+        {
+            return $"{_betType.ToString().ToLowerInvariant()}_{name}";
+        }
+
+        return $"{_betType.ToString().ToLowerInvariant()}_{JoinNumbersForSaveId(sortedNumbers)}";
+    }
+
+    private int[] GetSortedCoveredNumbers()
+    {
+        if (_coveredNumbers == null || _coveredNumbers.Length == 0)
+        {
+            return Array.Empty<int>();
+        }
+
+        int[] sortedNumbers = new int[_coveredNumbers.Length];
+        Array.Copy(_coveredNumbers, sortedNumbers, _coveredNumbers.Length);
+        Array.Sort(sortedNumbers);
+        return sortedNumbers;
+    }
+
+    private string JoinNumbersForSaveId(int[] sortedNumbers)
+    {
+        StringBuilder builder = new StringBuilder();
+
+        for (int i = 0; i < sortedNumbers.Length; i++)
+        {
+            if (i > 0)
+            {
+                builder.Append('_');
+            }
+
+            builder.Append(FormatNumberForSaveId(sortedNumbers[i]));
+        }
+
+        return builder.ToString();
+    }
+
+    private string FormatNumberForSaveId(int number)
+    {
+        return number == 37 ? "00" : number.ToString();
+    }
+
+#if UNITY_EDITOR
+    public void StampGeneratedSaveId()
+    {
+        _saveId = GetSemanticSaveId();
+        UnityEditor.EditorUtility.SetDirty(this);
+    }
+#endif
+
+    private int ResolveDozenIndex(int[] sortedNumbers)
+    {
+        if (sortedNumbers.Length == 0)
+        {
+            return 0;
+        }
+
+        int firstNumber = sortedNumbers[0];
+        if (firstNumber >= 25)
+        {
+            return 3;
+        }
+
+        if (firstNumber >= 13)
+        {
+            return 2;
+        }
+
+        return 1;
+    }
+
+    private int ResolveColumnIndex(int[] sortedNumbers)
+    {
+        if (sortedNumbers.Length == 0)
+        {
+            return 0;
+        }
+
+        int firstNumber = sortedNumbers[0];
+        int modulo = firstNumber % 3;
+        return modulo == 0 ? 3 : modulo;
     }
 }
 

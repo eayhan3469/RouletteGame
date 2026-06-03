@@ -48,7 +48,7 @@ public sealed class ResultState : GameStateBase
 
             Context.PlayerData.Balance += amountWon;
             Context.ClearPendingSpinBets();
-            SaveLoadManager.Save(Context.PlayerData);
+            Context.SaveActiveGameData();
             Context.StatisticsUIController?.RefreshStats(Context.PlayerData);
         }
         else

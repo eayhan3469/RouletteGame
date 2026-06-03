@@ -26,7 +26,6 @@ public sealed class PlayerData
     public float TotalWagered;
     public float TotalWon;
     public float Balance;
-    public bool IsEuropeanRoulette = true;
     public RoundPhase SavedRoundPhase;
     public int PendingSpinTargetNumber = -1;
     public List<SavedBetData> SavedBets = new List<SavedBetData>();
@@ -38,7 +37,13 @@ public sealed class PlayerData
         TotalWagered = 0f;
         TotalWon = 0f;
         Balance = 0f;
-        IsEuropeanRoulette = true;
+        SavedRoundPhase = RoundPhase.None;
+        PendingSpinTargetNumber = -1;
+        SavedBets = new List<SavedBetData>();
+    }
+
+    public void ClearRoundState()
+    {
         SavedRoundPhase = RoundPhase.None;
         PendingSpinTargetNumber = -1;
         SavedBets = new List<SavedBetData>();
