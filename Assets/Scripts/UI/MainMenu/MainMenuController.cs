@@ -17,7 +17,15 @@ public sealed class MainMenuController : MonoBehaviour
     private Button _clearSaveButton;
 
     [SerializeField]
+    private ToggleGroup _rouletteTypeToggleGroup;
+
+    [SerializeField]
     private Toggle _europeanRouletteToggle;
+
+    [SerializeField]
+    private Toggle _americanRouletteToggle;
+
+    private bool _isApplyingRouletteTypeSelection;
 
     public event Action<RouletteVariant> PlayButtonClicked;
     public event Action ClearSaveButtonClicked;
@@ -26,12 +34,15 @@ public sealed class MainMenuController : MonoBehaviour
     {
         RegisterPlayButtonListener();
         RegisterClearSaveButtonListener();
+        RegisterRouletteTypeToggleListeners();
+        ConfigureRouletteTypeToggleGroup();
     }
 
     private void OnDestroy()
     {
         UnregisterPlayButtonListener();
         UnregisterClearSaveButtonListener();
+        UnregisterRouletteTypeToggleListeners();
     }
 
     /// <summary>
@@ -39,13 +50,13 @@ public sealed class MainMenuController : MonoBehaviour
     /// </summary>
     public void SetSelectedRouletteType(RouletteVariant rouletteVariant)
     {
-        if (_europeanRouletteToggle == null)
+        if (_europeanRouletteToggle == null && _americanRouletteToggle == null)
         {
-            Debug.LogWarning("MainMenuController is missing the roulette type toggle reference.");
+            Debug.LogWarning("MainMenuController is missing roulette type toggle references.");
             return;
         }
 
-        _europeanRouletteToggle.isOn = rouletteVariant == RouletteVariant.European;
+        ApplyRouletteTypeSelection(rouletteVariant);
     }
 
     public void SetClearSaveButtonInteractable(bool isInteractable)
@@ -61,10 +72,7 @@ public sealed class MainMenuController : MonoBehaviour
 
     private void HandlePlayButtonClicked()
     {
-        RouletteVariant selectedVariant = _europeanRouletteToggle == null || _europeanRouletteToggle.isOn
-            ? RouletteVariant.European
-            : RouletteVariant.American;
-        PlayButtonClicked?.Invoke(selectedVariant);
+        PlayButtonClicked?.Invoke(GetSelectedRouletteVariant());
     }
 
     private void HandleClearSaveButtonClicked()
@@ -98,6 +106,41 @@ public sealed class MainMenuController : MonoBehaviour
         }
     }
 
+    private void RegisterRouletteTypeToggleListeners()
+    {
+        if (_europeanRouletteToggle != null)
+        {
+            _europeanRouletteToggle.onValueChanged.RemoveListener(HandleEuropeanRouletteToggleChanged);
+            _europeanRouletteToggle.onValueChanged.AddListener(HandleEuropeanRouletteToggleChanged);
+        }
+
+        if (_americanRouletteToggle != null)
+        {
+            _americanRouletteToggle.onValueChanged.RemoveListener(HandleAmericanRouletteToggleChanged);
+            _americanRouletteToggle.onValueChanged.AddListener(HandleAmericanRouletteToggleChanged);
+        }
+    }
+
+    private void ConfigureRouletteTypeToggleGroup()
+    {
+        if (_rouletteTypeToggleGroup == null)
+        {
+            return;
+        }
+
+        _rouletteTypeToggleGroup.allowSwitchOff = false;
+
+        if (_europeanRouletteToggle != null)
+        {
+            _europeanRouletteToggle.group = _rouletteTypeToggleGroup;
+        }
+
+        if (_americanRouletteToggle != null)
+        {
+            _americanRouletteToggle.group = _rouletteTypeToggleGroup;
+        }
+    }
+
     private void UnregisterPlayButtonListener()
     {
         if (_playButton != null)
@@ -112,5 +155,65 @@ public sealed class MainMenuController : MonoBehaviour
         {
             _clearSaveButton.onClick.RemoveListener(HandleClearSaveButtonClicked);
         }
+    }
+
+    private void UnregisterRouletteTypeToggleListeners()
+    {
+        if (_europeanRouletteToggle != null)
+        {
+            _europeanRouletteToggle.onValueChanged.RemoveListener(HandleEuropeanRouletteToggleChanged);
+        }
+
+        if (_americanRouletteToggle != null)
+        {
+            _americanRouletteToggle.onValueChanged.RemoveListener(HandleAmericanRouletteToggleChanged);
+        }
+    }
+
+    private void HandleEuropeanRouletteToggleChanged(bool isOn)
+    {
+        if (!isOn || _isApplyingRouletteTypeSelection)
+        {
+            return;
+        }
+
+        ApplyRouletteTypeSelection(RouletteVariant.European);
+    }
+
+    private void HandleAmericanRouletteToggleChanged(bool isOn)
+    {
+        if (!isOn || _isApplyingRouletteTypeSelection)
+        {
+            return;
+        }
+
+        ApplyRouletteTypeSelection(RouletteVariant.American);
+    }
+
+    private void ApplyRouletteTypeSelection(RouletteVariant rouletteVariant)
+    {
+        _isApplyingRouletteTypeSelection = true;
+
+        if (_europeanRouletteToggle != null)
+        {
+            _europeanRouletteToggle.SetIsOnWithoutNotify(rouletteVariant == RouletteVariant.European);
+        }
+
+        if (_americanRouletteToggle != null)
+        {
+            _americanRouletteToggle.SetIsOnWithoutNotify(rouletteVariant == RouletteVariant.American);
+        }
+
+        _isApplyingRouletteTypeSelection = false;
+    }
+
+    private RouletteVariant GetSelectedRouletteVariant()
+    {
+        if (_americanRouletteToggle != null && _americanRouletteToggle.isOn)
+        {
+            return RouletteVariant.American;
+        }
+
+        return RouletteVariant.European;
     }
 }
