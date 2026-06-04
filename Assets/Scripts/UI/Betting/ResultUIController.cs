@@ -22,7 +22,7 @@ public sealed class ResultUIController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _winningNumberText;
     [SerializeField] private TextMeshProUGUI _resultText;
 
-    public void ShowResult(float amountWon, int winningNumber)
+    public void ShowResult(float roundResult, int winningNumber)
     {
         SetVisible(true);
 
@@ -34,25 +34,25 @@ public sealed class ResultUIController : MonoBehaviour
 
         if (_headlineText != null)
         {
-            _headlineText.text = amountWon > 0f
+            _headlineText.text = roundResult > 0f
                 ? "Round Won"
-                : amountWon < 0f
+                : roundResult < 0f
                     ? "Round Lost"
                     : "Round Complete";
         }
 
         UpdateWinningNumberText(winningNumber);
 
-        if (amountWon > 0f)
+        if (roundResult > 0f)
         {
-            _resultText.text = $"+{amountWon:0.##}";
+            _resultText.text = $"+{roundResult:0.##}";
             _resultText.color = PositiveResultColor;
             return;
         }
 
-        if (amountWon < 0f)
+        if (roundResult < 0f)
         {
-            _resultText.text = $"{amountWon:0.##}";
+            _resultText.text = $"{roundResult:0.##}";
             _resultText.color = NegativeResultColor;
             return;
         }

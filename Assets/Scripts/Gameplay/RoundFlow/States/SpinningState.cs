@@ -4,6 +4,7 @@
 public sealed class SpinningState : GameStateBase
 {
     private readonly int _targetNumber;
+    private WheelController _wheelController;
     private bool _isActive;
 
     public SpinningState(GameContext context, StateMachine stateMachine, int targetNumber)
@@ -19,23 +20,24 @@ public sealed class SpinningState : GameStateBase
         Context.SetChipInteractionEnabled(false);
         _isActive = true;
         Context.SavePendingSpinBets(_targetNumber);
+        _wheelController = Context.WheelController;
 
-        if (Context.WheelController == null)
+        if (_wheelController == null)
         {
             UnityEngine.Debug.LogWarning("SpinningState could not spin because WheelController is missing.");
             StateMachine.ChangeState(new ResultState(Context, StateMachine, _targetNumber));
             return;
         }
 
-        Context.WheelController.BallReleased -= HandleBallReleased;
-        Context.WheelController.BallReleased += HandleBallReleased;
-        Context.WheelController.BallPocketEntryStarted -= HandleBallPocketEntryStarted;
-        Context.WheelController.BallPocketEntryStarted += HandleBallPocketEntryStarted;
-        Context.WheelController.BallPocketBounced -= HandleBallPocketBounced;
-        Context.WheelController.BallPocketBounced += HandleBallPocketBounced;
-        Context.WheelController.BallPocketLanded -= HandleBallPocketLanded;
-        Context.WheelController.BallPocketLanded += HandleBallPocketLanded;
-        Context.WheelController.SpinToNumber(_targetNumber, HandleSpinCompleted);
+        _wheelController.BallReleased -= HandleBallReleased;
+        _wheelController.BallReleased += HandleBallReleased;
+        _wheelController.BallPocketEntryStarted -= HandleBallPocketEntryStarted;
+        _wheelController.BallPocketEntryStarted += HandleBallPocketEntryStarted;
+        _wheelController.BallPocketBounced -= HandleBallPocketBounced;
+        _wheelController.BallPocketBounced += HandleBallPocketBounced;
+        _wheelController.BallPocketLanded -= HandleBallPocketLanded;
+        _wheelController.BallPocketLanded += HandleBallPocketLanded;
+        _wheelController.SpinToNumber(_targetNumber, HandleSpinCompleted);
     }
 
     public override void Tick()
@@ -45,15 +47,16 @@ public sealed class SpinningState : GameStateBase
 
     public override void Exit()
     {
-        if (Context.WheelController != null)
+        if (_wheelController != null)
         {
-            Context.WheelController.BallReleased -= HandleBallReleased;
-            Context.WheelController.BallPocketEntryStarted -= HandleBallPocketEntryStarted;
-            Context.WheelController.BallPocketBounced -= HandleBallPocketBounced;
-            Context.WheelController.BallPocketLanded -= HandleBallPocketLanded;
+            _wheelController.BallReleased -= HandleBallReleased;
+            _wheelController.BallPocketEntryStarted -= HandleBallPocketEntryStarted;
+            _wheelController.BallPocketBounced -= HandleBallPocketBounced;
+            _wheelController.BallPocketLanded -= HandleBallPocketLanded;
         }
 
         Context.AudioFeedbackController?.StopBallTravelLoop();
+        _wheelController = null;
         _isActive = false;
         LogLifecycle("Exit");
     }
@@ -85,18 +88,17 @@ public sealed class SpinningState : GameStateBase
 
     private void HandleBallPocketLanded()
     {
-        //Context.AudioFeedbackController?.StopBallTravelLoop();
         Context.AudioFeedbackController?.PlayBallPocketLand();
     }
 
     private void UpdateBallLoopAudio()
     {
-        if (Context.WheelController == null || Context.AudioFeedbackController == null)
+        if (_wheelController == null || Context.AudioFeedbackController == null)
         {
             return;
         }
 
-        float maxBallSpeed = Context.WheelController.MaxBallDegreesPerSecond;
+        float maxBallSpeed = _wheelController.MaxBallDegreesPerSecond;
 
         if (maxBallSpeed <= 0f)
         {
@@ -105,7 +107,7 @@ public sealed class SpinningState : GameStateBase
         }
 
         float normalizedIntensity = UnityEngine.Mathf.Clamp01(
-            Context.WheelController.CurrentBallDegreesPerSecond / maxBallSpeed);
+            _wheelController.CurrentBallDegreesPerSecond / maxBallSpeed);
         Context.AudioFeedbackController.SetBallTravelIntensity(normalizedIntensity);
     }
 }

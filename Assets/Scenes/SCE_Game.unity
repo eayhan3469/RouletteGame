@@ -6263,7 +6263,6 @@ MonoBehaviour:
   _europeanTablePrefab: {fileID: 1137284852684032545, guid: 7b3fc11a38837d949b602d92da07d2e7, type: 3}
   _americanTablePrefab: {fileID: 6140914969797487074, guid: 8333f58762bb41f44a0ec94e380e7af5, type: 3}
   _spawnParent: {fileID: 184007432}
-  _sceneFallbackTable: {fileID: 0}
 --- !u!1 &200100000
 GameObject:
   m_ObjectHideFlags: 0

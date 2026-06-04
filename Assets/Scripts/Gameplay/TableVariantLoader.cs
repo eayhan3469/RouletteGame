@@ -15,12 +15,9 @@ public sealed class TableVariantLoader : MonoBehaviour
     [SerializeField]
     private Transform _spawnParent;
 
-    [SerializeField]
-    private RouletteTableVariant _sceneFallbackTable;
-
     private RouletteTableVariant _activeTable;
 
-    public RouletteTableVariant ActiveTable => _activeTable != null ? _activeTable : _sceneFallbackTable;
+    public RouletteTableVariant ActiveTable => _activeTable;
 
     public RouletteTableVariant LoadVariant(RouletteVariant variant)
     {
@@ -28,14 +25,7 @@ public sealed class TableVariantLoader : MonoBehaviour
 
         if (prefab == null)
         {
-            if (_sceneFallbackTable != null)
-            {
-                _sceneFallbackTable.gameObject.SetActive(true);
-                _activeTable = _sceneFallbackTable;
-                return _activeTable;
-            }
-
-            Debug.LogWarning($"TableVariantLoader has no prefab or fallback table for {variant}.");
+            Debug.LogError($"TableVariantLoader cannot load {variant} because the table prefab is missing.");
             return null;
         }
 
@@ -53,11 +43,6 @@ public sealed class TableVariantLoader : MonoBehaviour
     public void ClearActiveTable()
     {
         DestroyActiveRuntimeInstance();
-
-        if (_sceneFallbackTable != null)
-        {
-            _sceneFallbackTable.gameObject.SetActive(false);
-        }
     }
 
     private RouletteTableVariant GetPrefab(RouletteVariant variant)
@@ -67,9 +52,8 @@ public sealed class TableVariantLoader : MonoBehaviour
 
     private void DestroyActiveRuntimeInstance()
     {
-        if (_activeTable == null || _activeTable == _sceneFallbackTable)
+        if (_activeTable == null)
         {
-            _activeTable = null;
             return;
         }
 

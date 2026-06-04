@@ -178,6 +178,12 @@ public sealed class BettingState : GameStateBase
             return;
         }
 
+        if (Context.BetManager == null || Context.BetManager.ActiveBets.Count == 0)
+        {
+            UnityEngine.Debug.LogWarning("BettingState ignored spin request because there are no active bets.");
+            return;
+        }
+
         int resolvedTargetNumber = ResolveTargetNumber(targetNumber, Context.ActiveRouletteVariant);
         StateMachine.ChangeState(new SpinningState(Context, StateMachine, resolvedTargetNumber));
     }

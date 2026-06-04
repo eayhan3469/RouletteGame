@@ -12,6 +12,7 @@ public sealed class ResultState : GameStateBase
     private const float ResultHoldAfterSettlement = 1f;
 
     private readonly int _winningNumber;
+    private BetManager _betManager;
     private Coroutine _returnToBettingCoroutine;
 
     public ResultState(GameContext context, StateMachine stateMachine, int winningNumber)
@@ -25,12 +26,13 @@ public sealed class ResultState : GameStateBase
         LogLifecycle($"Enter - Winning Number: {_winningNumber}");
         Context.SetChipInteractionEnabled(false);
         Context.VfxManager?.StopAndClearAll();
+        _betManager = Context.BetManager;
 
-        float totalBet = Context.BetManager != null
-            ? Context.BetManager.TotalBet
+        float totalBet = _betManager != null
+            ? _betManager.TotalBet
             : 0f;
-        float amountWon = Context.BetManager != null
-            ? Context.BetManager.CalculateWinnings(_winningNumber)
+        float amountWon = _betManager != null
+            ? _betManager.CalculateWinnings(_winningNumber)
             : 0f;
         float roundResult = amountWon - totalBet;
 
@@ -70,7 +72,8 @@ public sealed class ResultState : GameStateBase
             _returnToBettingCoroutine = null;
         }
 
-        Context.BetManager?.ClearTableBets();
+        _betManager?.ClearTableBets();
+        _betManager = null;
         Context.ResultUIController?.Hide();
         Context.VfxManager?.StopAndClearAll();
         LogLifecycle("Exit");
@@ -84,20 +87,15 @@ public sealed class ResultState : GameStateBase
         {
             Context.AudioFeedbackController?.PlayRoundResult(roundResult);
             Context.ResultUIController.ShowResult(roundResult, _winningNumber);
-
-            if (roundResult > 0f)
-            {
-                Context.VfxManager?.PlayWinSequence();
-            }
         }
         else
         {
             Debug.LogWarning("ResultState is missing the ResultUIController reference.");
+        }
 
-            if (roundResult > 0f)
-            {
-                Context.VfxManager?.PlayWinSequence();
-            }
+        if (roundResult > 0f)
+        {
+            Context.VfxManager?.PlayWinSequence();
         }
 
         if (Context.ResultUIController != null)
@@ -112,7 +110,7 @@ public sealed class ResultState : GameStateBase
             yield return Context.VfxManager.PlaySettlement(
                 roundResult,
                 amountWon,
-                Context.BetManager != null ? Context.BetManager.ActiveBets : null,
+                _betManager != null ? _betManager.ActiveBets : null,
                 Context.ChipManager,
                 Context.AudioFeedbackController);
         }
