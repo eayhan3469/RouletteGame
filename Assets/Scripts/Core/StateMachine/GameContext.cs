@@ -102,11 +102,6 @@ public sealed class GameContext : MonoBehaviour
         SaveData.EnsureProfiles();
     }
 
-    public void SetPlayerData(PlayerData playerData)
-    {
-        PlayerData = playerData;
-    }
-
     public void SetActiveProfile(RouletteVariant variant)
     {
         if (SaveData == null)
@@ -145,16 +140,14 @@ public sealed class GameContext : MonoBehaviour
 
     private void EnsureAudioFeedbackController()
     {
-        if (_audioFeedbackController != null)
+        if (_audioFeedbackController == null)
         {
-            return;
+            _audioFeedbackController = FindFirstObjectByType<RouletteAudioFeedbackController>();
         }
-
-        _audioFeedbackController = GetComponent<RouletteAudioFeedbackController>();
 
         if (_audioFeedbackController == null)
         {
-            _audioFeedbackController = gameObject.AddComponent<RouletteAudioFeedbackController>();
+            Debug.LogWarning("GameContext is missing the RouletteAudioFeedbackController reference.");
         }
     }
 

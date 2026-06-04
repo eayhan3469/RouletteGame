@@ -19,9 +19,9 @@ public sealed class InitializeState : GameStateBase
         Context.SetChipInteractionEnabled(false);
 
         bool hasExistingSave = File.Exists(SaveLoadManager.SavePath);
-        GameSaveData saveData = SaveLoadManager.Load();
+        bool loadedSave = SaveLoadManager.TryLoad(out GameSaveData saveData);
 
-        if (!hasExistingSave)
+        if (!loadedSave)
         {
             saveData = CreateDefaultSaveData();
         }
@@ -67,6 +67,8 @@ public sealed class InitializeState : GameStateBase
             Context.SetSaveData(CreateDefaultSaveData());
         }
 
+        RouletteVariant previousVariant = Context.SaveData.LastSelectedVariant;
+        PlayerData previousProfile = Context.PlayerData;
         TableVariantLoader tableVariantLoader = UnityEngine.Object.FindFirstObjectByType<TableVariantLoader>();
 
         if (tableVariantLoader == null)
@@ -83,7 +85,13 @@ public sealed class InitializeState : GameStateBase
             return;
         }
 
-        bool changedVariant = Context.SaveData.LastSelectedVariant != rouletteVariant;
+        bool changedVariant = previousVariant != rouletteVariant;
+
+        if (changedVariant)
+        {
+            previousProfile?.ClearRoundState();
+        }
+
         Context.SetActiveProfile(rouletteVariant);
 
         if (changedVariant && Context.PlayerData != null)

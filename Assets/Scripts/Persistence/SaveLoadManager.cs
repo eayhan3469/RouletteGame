@@ -34,9 +34,17 @@ public static class SaveLoadManager
 
     public static GameSaveData Load()
     {
+        return TryLoad(out GameSaveData saveData)
+            ? saveData
+            : new GameSaveData();
+    }
+
+    public static bool TryLoad(out GameSaveData saveData)
+    {
         if (!File.Exists(SavePath))
         {
-            return new GameSaveData();
+            saveData = null;
+            return false;
         }
 
         try
@@ -45,25 +53,27 @@ public static class SaveLoadManager
 
             if (string.IsNullOrWhiteSpace(json))
             {
-                Debug.LogWarning("Save file was empty. Returning default game data.");
-                return new GameSaveData();
+                Debug.LogWarning("Save file was empty.");
+                saveData = null;
+                return false;
             }
 
-            GameSaveData saveData = JsonUtility.FromJson<GameSaveData>(json);
+            saveData = JsonUtility.FromJson<GameSaveData>(json);
 
             if (saveData == null)
             {
-                Debug.LogWarning("Save data was invalid. Returning default game data.");
-                return new GameSaveData();
+                Debug.LogWarning("Save data was invalid.");
+                return false;
             }
 
             saveData.EnsureProfiles();
-            return saveData;
+            return true;
         }
         catch (Exception exception)
         {
-            Debug.LogError($"Failed to load game data. Returning default game data. Exception: {exception.Message}");
-            return new GameSaveData();
+            Debug.LogError($"Failed to load game data. Exception: {exception.Message}");
+            saveData = null;
+            return false;
         }
     }
 
