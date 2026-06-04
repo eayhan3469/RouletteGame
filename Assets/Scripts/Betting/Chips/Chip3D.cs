@@ -1,7 +1,5 @@
 using System.Collections;
-using TMPro;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 /// <summary>
 /// Represents a physical 3D roulette chip in the scene.
@@ -11,27 +9,16 @@ using UnityEngine.InputSystem;
 [DisallowMultipleComponent]
 public sealed class Chip3D : MonoBehaviour
 {
-    private static readonly int BaseColorShaderProperty = Shader.PropertyToID("_BaseColor");
-    private static readonly int ColorShaderProperty = Shader.PropertyToID("_Color");
-    private static Chip3D _activeDraggedChip;
-
     [SerializeField]
     private int _value;
 
     [Header("Visual References")]
     [SerializeField]
-    private Renderer _chipRenderer;
+    private ChipVisualController _visualController;
 
+    [Header("Placement References")]
     [SerializeField]
-    [Min(0)]
-    private int _bodyMaterialIndex;
-
-    [SerializeField]
-    [Min(0)]
-    private int _stripeMaterialIndex = 1;
-
-    [SerializeField]
-    private TextMeshPro _valueText;
+    private ChipBetPlacementController _placementController;
 
     [Header("Drag And Drop")]
     [SerializeField]
@@ -70,80 +57,45 @@ public sealed class Chip3D : MonoBehaviour
     [Min(0.01f)]
     private float _dropSnapDuration = 0.12f;
 
-    private MaterialPropertyBlock _materialPropertyBlock;
+    [SerializeField]
+    [Min(0.01f)]
+    private float _trayReturnDuration = 0.3f;
+
+    [SerializeField]
+    [Min(0f)]
+    private float _trayReturnArcHeight = 0.35f;
+
     private readonly RaycastHit[] _raycastHits = new RaycastHit[16];
     private Collider[] _colliders;
     private Coroutine _returnToOriginCoroutine;
     private Coroutine _settleCoroutine;
+    private Coroutine _returnToTrayCoroutine;
     private Plane _dragPlane;
-    private BetManager _betManager;
     private BetSpotHighlighter _betSpotHighlighter;
-    private ChipManager _chipManager;
     private GameContext _gameContext;
     private BetSpot _currentHoveredSpot;
-    private BetSpot _assignedBetSpot;
-    private BetSpot _dragOriginBetSpot;
     private Transform _dragStartParent;
-    private Transform _traySourceSlot;
     private Vector3 _dragStartLocalPosition;
     private Vector3 _dragStartLocalScale;
     private Quaternion _dragStartLocalRotation;
     private Quaternion _dragStartWorldRotation;
     private Vector3 _lastDragTargetPosition;
     private bool _isDragging;
-    private bool _isTrayChip;
 
     public int Value => _value;
-    public static bool HasActiveDrag => _activeDraggedChip != null;
+    public static bool HasActiveDrag => ChipInputController.HasActiveDrag;
 
     private void Awake()
     {
         CacheReferencesIfNeeded();
         _colliders = GetComponentsInChildren<Collider>();
         _gameContext = FindFirstObjectByType<GameContext>();
-        _betManager = ResolveActiveBetManager();
         _betSpotHighlighter = FindFirstObjectByType<BetSpotHighlighter>();
     }
 
-    private void Update()
+    private void OnDestroy()
     {
-        Mouse mouse = Mouse.current;
-
-        if (mouse == null)
-        {
-            return;
-        }
-
-        if (!CanAcceptChipInput())
-        {
-            CancelDragIfInteractionWasDisabled();
-            return;
-        }
-
-        if (mouse.leftButton.wasPressedThisFrame)
-        {
-            TryBeginDrag(mouse.position.ReadValue());
-        }
-
-        if (mouse.rightButton.wasPressedThisFrame)
-        {
-            TryReturnPlacedBet(mouse.position.ReadValue());
-        }
-
-        if (_activeDraggedChip != this)
-        {
-            return;
-        }
-
-        if (mouse.leftButton.isPressed)
-        {
-            DragToPointer(mouse.position.ReadValue());
-        }
-
-        if (mouse.leftButton.wasReleasedThisFrame)
-        {
-            EndDrag();
-        }
+        ChipInputController.ClearActiveDrag(this);
     }
 
 #if UNITY_EDITOR
@@ -156,22 +108,17 @@ public sealed class Chip3D : MonoBehaviour
     public void Initialize(int value, Color bodyColor, Color stripeColor, Color textColor)
     {
         _value = value;
-        ApplyVisuals(value, bodyColor, stripeColor, textColor);
+        _visualController?.ApplyVisuals(value, bodyColor, stripeColor, textColor);
     }
 
     public void AssignTraySource(ChipManager chipManager, Transform traySourceSlot)
     {
-        _chipManager = chipManager;
-        _traySourceSlot = traySourceSlot;
-        _isTrayChip = chipManager != null && traySourceSlot != null;
+        _placementController?.AssignTraySource(chipManager, traySourceSlot);
     }
 
     public void MarkPlacedOnBetSpot(BetSpot betSpot)
     {
-        _assignedBetSpot = betSpot;
-        _dragOriginBetSpot = null;
-        _traySourceSlot = null;
-        _isTrayChip = false;
+        _placementController?.MarkPlacedOnBetSpot(betSpot);
     }
 
     public void PrepareForSettlement()
@@ -188,45 +135,40 @@ public sealed class Chip3D : MonoBehaviour
             _settleCoroutine = null;
         }
 
-        if (_activeDraggedChip == this)
+        if (_returnToTrayCoroutine != null)
         {
-            _activeDraggedChip = null;
+            StopCoroutine(_returnToTrayCoroutine);
+            _returnToTrayCoroutine = null;
         }
 
+        ChipInputController.ClearActiveDrag(this);
+
         _isDragging = false;
-        _assignedBetSpot = null;
-        _dragOriginBetSpot = null;
-        _traySourceSlot = null;
-        _isTrayChip = false;
+        _placementController?.ClearForSettlement();
         ClearHoveredSpot();
         SetCollidersEnabled(false);
         enabled = false;
     }
 
-    private void TryBeginDrag(Vector2 screenPosition)
+    internal bool TryBeginDrag(Vector2 screenPosition)
     {
-        if (!CanAcceptChipInput())
-        {
-            return;
-        }
-
-        if (_activeDraggedChip != null)
-        {
-            return;
-        }
-
         Camera mainCamera = Camera.main;
 
         if (mainCamera == null)
         {
-            return;
+            return false;
         }
 
         Ray selectionRay = mainCamera.ScreenPointToRay(screenPosition);
 
         if (!Physics.Raycast(selectionRay, out RaycastHit hit, Mathf.Infinity) || !OwnsCollider(hit.collider))
         {
-            return;
+            return false;
+        }
+
+        if (_gameContext == null)
+        {
+            _gameContext = FindFirstObjectByType<GameContext>();
         }
 
         _gameContext?.AudioFeedbackController?.PlayChipPickup();
@@ -247,14 +189,7 @@ public sealed class Chip3D : MonoBehaviour
 
         ClearHoveredSpot();
 
-        _dragOriginBetSpot = _assignedBetSpot;
-
-        if (_dragOriginBetSpot != null)
-        {
-            _dragOriginBetSpot.UnregisterChip(this);
-            ResolveActiveBetManager()?.UnregisterBet(this);
-            _assignedBetSpot = null;
-        }
+        _placementController?.ReleaseAssignedBetForDrag(this);
 
         _dragStartParent = transform.parent;
         _dragStartLocalPosition = transform.localPosition;
@@ -265,52 +200,44 @@ public sealed class Chip3D : MonoBehaviour
         float dragPlaneWorldHeight = Mathf.Max(_dragPlaneHeight, transform.position.y + _dragHoverOffset);
         _dragPlane = new Plane(Vector3.up, new Vector3(0f, dragPlaneWorldHeight, 0f));
         _isDragging = true;
-        _activeDraggedChip = this;
 
         transform.SetParent(null, true);
+        return true;
     }
 
-    private void TryReturnPlacedBet(Vector2 screenPosition)
+    internal bool TryReturnPlacedBet(Vector2 screenPosition)
     {
-        if (!CanAcceptChipInput())
+        if (_isDragging || _returnToTrayCoroutine != null || _placementController == null || !_placementController.HasPlacedBet)
         {
-            return;
-        }
-
-        if (_isDragging || _assignedBetSpot == null || _activeDraggedChip != null)
-        {
-            return;
+            return false;
         }
 
         Camera mainCamera = Camera.main;
 
         if (mainCamera == null)
         {
-            return;
+            return false;
         }
 
         Ray selectionRay = mainCamera.ScreenPointToRay(screenPosition);
 
         if (!Physics.Raycast(selectionRay, out RaycastHit hit, Mathf.Infinity) || !OwnsCollider(hit.collider))
         {
-            return;
+            return false;
         }
 
-        ResolveActiveBetManager()?.UnregisterBet(this);
-        _assignedBetSpot = null;
-        _dragOriginBetSpot = null;
+        if (!_placementController.TryBeginReturnPlacedBet(this, out Vector3 returnTargetPosition, out bool hasReturnTarget))
+        {
+            return false;
+        }
+
         ClearHoveredSpot();
 
-        if (_gameContext != null && _gameContext.PlayerData != null)
+        if (hasReturnTarget)
         {
-            _gameContext.PlayerData.Balance += Value;
-            _gameContext.BettingUIController?.UpdateBalanceText(_gameContext.PlayerData.Balance);
+            _returnToTrayCoroutine = StartCoroutine(AnimateReturnToTrayRoutine(returnTargetPosition));
+            return true;
         }
-
-        _gameContext?.SaveCurrentBettingState();
-        _gameContext?.AudioFeedbackController?.PlayChipDrop();
-
-        _chipManager?.ReturnChipToTray(Value);
 
         if (Application.isPlaying)
         {
@@ -320,11 +247,13 @@ public sealed class Chip3D : MonoBehaviour
         {
             DestroyImmediate(gameObject);
         }
+
+        return true;
     }
 
-    private void DragToPointer(Vector2 screenPosition)
+    internal void DragToPointer(Vector2 screenPosition)
     {
-        if (!_isDragging || !CanAcceptChipInput())
+        if (!_isDragging)
         {
             return;
         }
@@ -372,21 +301,20 @@ public sealed class Chip3D : MonoBehaviour
             visualInterpolation);
     }
 
-    private void EndDrag()
+    internal void EndDrag(Vector2 screenPosition)
     {
-        if (!_isDragging || !CanAcceptChipInput())
+        if (!_isDragging)
         {
             return;
         }
 
         _isDragging = false;
-        _activeDraggedChip = null;
 
         BetSpot betSpot = _currentHoveredSpot;
 
-        if (betSpot == null && Mouse.current != null)
+        if (betSpot == null)
         {
-            TryGetBetSpotFromPointer(Mouse.current.position.ReadValue(), out betSpot, out _);
+            TryGetBetSpotFromPointer(screenPosition, out betSpot, out _);
         }
 
         if (betSpot != null)
@@ -402,46 +330,14 @@ public sealed class Chip3D : MonoBehaviour
         _returnToOriginCoroutine = StartCoroutine(ReturnToOriginRoutine());
     }
 
-    private bool CanAcceptChipInput()
+    internal void CancelDrag()
     {
-        if (_gameContext == null)
-        {
-            _gameContext = FindFirstObjectByType<GameContext>();
-        }
-
-            return _gameContext == null || _gameContext.IsChipInteractionEnabled;
-    }
-
-    private BetManager ResolveActiveBetManager()
-    {
-        if (_gameContext == null)
-        {
-            _gameContext = FindFirstObjectByType<GameContext>();
-        }
-
-        if (_gameContext != null && _gameContext.BetManager != null)
-        {
-            _betManager = _gameContext.BetManager;
-            return _betManager;
-        }
-
-        if (_betManager == null)
-        {
-            _betManager = FindFirstObjectByType<BetManager>();
-        }
-
-        return _betManager;
-    }
-
-    private void CancelDragIfInteractionWasDisabled()
-    {
-        if (_activeDraggedChip != this || !_isDragging)
+        if (!_isDragging)
         {
             return;
         }
 
         _isDragging = false;
-        _activeDraggedChip = null;
         ClearHoveredSpot();
 
         if (_returnToOriginCoroutine == null)
@@ -450,94 +346,17 @@ public sealed class Chip3D : MonoBehaviour
         }
     }
 
-    private void ApplyVisuals(int value, Color bodyColor, Color stripeColor, Color textColor)
-    {
-        ApplyValueText(value);
-        ApplyMaterialColor(_bodyMaterialIndex, bodyColor);
-        ApplyMaterialColor(_stripeMaterialIndex, stripeColor);
-        ApplyTextColor(textColor);
-    }
-
-    private void ApplyValueText(int value)
-    {
-        if (_valueText == null)
-        {
-            return;
-        }
-
-        _valueText.text = value.ToString();
-    }
-
-    private void ApplyTextColor(Color textColor)
-    {
-        if (_valueText == null)
-        {
-            return;
-        }
-
-        _valueText.color = textColor;
-    }
-
     private void CacheReferencesIfNeeded()
     {
-        if (_chipRenderer == null)
+        if (_visualController == null)
         {
-            _chipRenderer = GetComponentInChildren<Renderer>();
+            _visualController = GetComponent<ChipVisualController>();
         }
 
-        if (_valueText == null)
+        if (_placementController == null)
         {
-            _valueText = GetComponentInChildren<TextMeshPro>();
+            _placementController = GetComponent<ChipBetPlacementController>();
         }
-    }
-
-    private void ApplyMaterialColor(int materialIndex, Color color)
-    {
-        if (_chipRenderer == null)
-        {
-            return;
-        }
-
-        if (_materialPropertyBlock == null)
-        {
-            _materialPropertyBlock = new MaterialPropertyBlock();
-        }
-
-        _chipRenderer.GetPropertyBlock(_materialPropertyBlock, materialIndex);
-
-        Material sharedMaterial = GetSharedMaterial(materialIndex);
-
-        if (sharedMaterial != null)
-        {
-            if (sharedMaterial.HasProperty(BaseColorShaderProperty))
-            {
-                _materialPropertyBlock.SetColor(BaseColorShaderProperty, color);
-            }
-
-            if (sharedMaterial.HasProperty(ColorShaderProperty))
-            {
-                _materialPropertyBlock.SetColor(ColorShaderProperty, color);
-            }
-        }
-
-        _chipRenderer.SetPropertyBlock(_materialPropertyBlock, materialIndex);
-    }
-
-    private Material GetSharedMaterial(int materialIndex)
-    {
-        if (_chipRenderer == null)
-        {
-            return null;
-        }
-
-        Material[] sharedMaterials = _chipRenderer.sharedMaterials;
-
-        if (sharedMaterials == null || materialIndex < 0 || materialIndex >= sharedMaterials.Length)
-        {
-            return null;
-        }
-
-        return sharedMaterials[materialIndex];
     }
 
     private bool TryGetBetSpotFromPointer(Vector2 screenPosition, out BetSpot betSpot, out Vector3 previewPosition)
@@ -603,27 +422,6 @@ public sealed class Chip3D : MonoBehaviour
         return false;
     }
 
-    private float GetChipHeight()
-    {
-        if (_colliders != null)
-        {
-            for (int i = 0; i < _colliders.Length; i++)
-            {
-                if (_colliders[i] != null)
-                {
-                    return _colliders[i].bounds.size.y;
-                }
-            }
-        }
-
-        if (_chipRenderer != null)
-        {
-            return _chipRenderer.bounds.size.y;
-        }
-
-        return 0.1f;
-    }
-
     private IEnumerator ReturnToOriginRoutine()
     {
         SetCollidersEnabled(false);
@@ -665,15 +463,7 @@ public sealed class Chip3D : MonoBehaviour
 
         SetCollidersEnabled(true);
 
-        if (_dragOriginBetSpot != null)
-        {
-            _dragOriginBetSpot.RegisterChip(this);
-            ResolveActiveBetManager()?.RegisterBet(this, _dragOriginBetSpot);
-            _assignedBetSpot = _dragOriginBetSpot;
-            _dragOriginBetSpot = null;
-            _gameContext?.SaveCurrentBettingState();
-            _gameContext?.AudioFeedbackController?.PlayChipDrop();
-        }
+        _placementController?.RestoreDragOrigin(this);
 
         _returnToOriginCoroutine = null;
     }
@@ -707,27 +497,51 @@ public sealed class Chip3D : MonoBehaviour
         transform.rotation = targetRotation;
         transform.localScale = _dragStartLocalScale;
         transform.SetParent(betSpot.transform, true);
-        betSpot.RegisterChip(this);
-        ResolveActiveBetManager()?.RegisterBet(this, betSpot);
-        bool wasTrayChip = _isTrayChip && _traySourceSlot != null;
-        MarkPlacedOnBetSpot(betSpot);
-
-        if (wasTrayChip)
-        {
-            _chipManager?.ConsumeTrayChip(this, _dragStartParent);
-
-            if (_gameContext != null && _gameContext.PlayerData != null)
-            {
-                _gameContext.PlayerData.Balance -= Value;
-                _gameContext.BettingUIController?.UpdateBalanceText(_gameContext.PlayerData.Balance);
-            }
-        }
-
-        _gameContext?.SaveCurrentBettingState();
-        _gameContext?.AudioFeedbackController?.PlayChipDrop();
+        _placementController?.CommitDropToBetSpot(this, betSpot, _dragStartParent);
 
         SetCollidersEnabled(true);
         _settleCoroutine = null;
+    }
+
+    private IEnumerator AnimateReturnToTrayRoutine(Vector3 targetPosition)
+    {
+        SetCollidersEnabled(false);
+        transform.SetParent(null, true);
+
+        Vector3 startPosition = transform.position;
+        Quaternion startRotation = transform.rotation;
+        Vector3 startScale = transform.localScale;
+        Quaternion targetRotation = Quaternion.identity;
+        float elapsedTime = 0f;
+
+        while (elapsedTime < _trayReturnDuration)
+        {
+            elapsedTime += Time.deltaTime;
+            float normalizedTime = EaseOut(Mathf.Clamp01(elapsedTime / _trayReturnDuration));
+            float arcOffset = Mathf.Sin(normalizedTime * Mathf.PI) * _trayReturnArcHeight;
+
+            transform.position = Vector3.Lerp(startPosition, targetPosition, normalizedTime) + (Vector3.up * arcOffset);
+            transform.rotation = Quaternion.Slerp(startRotation, targetRotation, normalizedTime);
+            transform.localScale = Vector3.Lerp(startScale, Vector3.one, normalizedTime);
+
+            yield return null;
+        }
+
+        transform.position = targetPosition;
+        transform.rotation = targetRotation;
+        transform.localScale = Vector3.one;
+
+        _placementController?.CompleteReturnToTray(this);
+        _returnToTrayCoroutine = null;
+
+        if (Application.isPlaying)
+        {
+            Destroy(gameObject);
+        }
+        else
+        {
+            DestroyImmediate(gameObject);
+        }
     }
 
     private Vector3 GetDragStartWorldPosition()

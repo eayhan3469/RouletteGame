@@ -10,8 +10,11 @@ GameObject:
   m_Component:
   - component: {fileID: 7044794713366173123}
   - component: {fileID: 825055458774608419}
+  - component: {fileID: 6677889900112233}
+  - component: {fileID: 5544332211009988}
   - component: {fileID: 8323502364795518276}
   - component: {fileID: 2999304947080849581}
+  - component: {fileID: 7766554433221100}
   m_Layer: 0
   m_Name: PRE_Chip3D
   m_TagString: Untagged
@@ -49,10 +52,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Chip3D
   _value: 5
-  _chipRenderer: {fileID: 9124747012911091778}
-  _bodyMaterialIndex: 1
-  _stripeMaterialIndex: 0
-  _valueText: {fileID: 47232389560127328}
+  _visualController: {fileID: 7766554433221100}
+  _placementController: {fileID: 6677889900112233}
   _dragPlaneHeight: 1
   _dragHoverOffset: 0.1
   _returnDuration: 0.2
@@ -62,6 +63,49 @@ MonoBehaviour:
   _tiltSensitivity: 70
   _visualFollowSpeed: 14
   _dropSnapDuration: 0.12
+  _trayReturnDuration: 0.3
+  _trayReturnArcHeight: 0.35
+--- !u!114 &6677889900112233
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3338313632083886389}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f1e2d4c5b6a4789a0b1c2d3e4f56789, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChipBetPlacementController
+--- !u!114 &5544332211009988
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3338313632083886389}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a9c8e7f6d5b4a3c91e0f123456789ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChipInputController
+  _chip: {fileID: 825055458774608419}
+--- !u!114 &7766554433221100
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3338313632083886389}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a6b0c4d5e6f47899a0b1c2d3e4f5061, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChipVisualController
+  _chipRenderer: {fileID: 9124747012911091778}
+  _bodyMaterialIndex: 1
+  _stripeMaterialIndex: 0
+  _valueText: {fileID: 47232389560127328}
 --- !u!65 &8323502364795518276
 BoxCollider:
   m_ObjectHideFlags: 0

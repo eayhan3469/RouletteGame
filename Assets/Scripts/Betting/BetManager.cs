@@ -240,7 +240,7 @@ public sealed class BetManager : MonoBehaviour
     {
         _betSpotLookup.Clear();
 
-        BetSpot[] betSpots = FindObjectsByType<BetSpot>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        BetSpot[] betSpots = GetComponentsInChildren<BetSpot>(false);
 
         for (int i = 0; i < betSpots.Length; i++)
         {
