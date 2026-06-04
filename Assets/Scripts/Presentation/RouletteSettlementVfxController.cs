@@ -352,13 +352,6 @@ public sealed class RouletteSettlementVfxController : MonoBehaviour
             return _winChipSpawnPoint.position;
         }
 
-        GameObject winVfxRoot = GameObject.Find("VFX_Win");
-
-        if (winVfxRoot != null)
-        {
-            return winVfxRoot.transform.position;
-        }
-
         return ResolvePlayerChipStackTarget(chipManager) + new Vector3(0f, 4f, 2f);
     }
 

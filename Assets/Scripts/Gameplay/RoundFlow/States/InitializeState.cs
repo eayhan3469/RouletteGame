@@ -67,17 +67,28 @@ public sealed class InitializeState : GameStateBase
             Context.SetSaveData(CreateDefaultSaveData());
         }
 
+        TableVariantLoader tableVariantLoader = UnityEngine.Object.FindFirstObjectByType<TableVariantLoader>();
+
+        if (tableVariantLoader == null)
+        {
+            UnityEngine.Debug.LogError("InitializeState could not load a table because no TableVariantLoader exists in the scene.");
+            return;
+        }
+
+        RouletteTableVariant tableVariant = tableVariantLoader.LoadVariant(rouletteVariant);
+
+        if (!Context.SetActiveTable(rouletteVariant, tableVariant))
+        {
+            UnityEngine.Debug.LogError($"InitializeState could not activate the {rouletteVariant} table.");
+            return;
+        }
+
         bool changedVariant = Context.SaveData.LastSelectedVariant != rouletteVariant;
         Context.SetActiveProfile(rouletteVariant);
 
         if (changedVariant && Context.PlayerData != null)
         {
             Context.PlayerData.ClearRoundState();
-        }
-
-        if (!Context.LoadTableVariant(rouletteVariant))
-        {
-            UnityEngine.Debug.LogWarning($"InitializeState could not load a table for {rouletteVariant}. Continuing with current scene references.");
         }
 
         Context.SaveActiveGameData();

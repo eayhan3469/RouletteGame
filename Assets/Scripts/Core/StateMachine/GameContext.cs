@@ -37,10 +37,7 @@ public sealed class GameContext : MonoBehaviour
     private RouletteAudioFeedbackController _audioFeedbackController;
 
     [SerializeField]
-    private RouletteWinVfxController _winVfxController;
-
-    [SerializeField]
-    private RouletteSettlementVfxController _settlementVfxController;
+    private RouletteVfxManager _vfxManager;
 
     [Header("Bootstrap")]
     [SerializeField]
@@ -49,18 +46,10 @@ public sealed class GameContext : MonoBehaviour
 
     [Header("Gameplay")]
     [SerializeField]
-    private TableVariantLoader _tableVariantLoader;
-
-    [SerializeField]
     private ChipManager _chipManager;
 
-    [SerializeField]
-    private BetManager _betManager;
-
-    [SerializeField]
-    private WheelController _wheelController;
-
     private StateMachine _stateMachine;
+    private RouletteTableVariant _activeTable;
 
     public StateMachine StateMachine => _stateMachine;
     public MainMenuController MainMenuController => _mainMenuController;
@@ -68,13 +57,12 @@ public sealed class GameContext : MonoBehaviour
     public ResultUIController ResultUIController => _resultUIController;
     public StatisticsUIController StatisticsUIController => _statisticsUIController;
     public RouletteAudioFeedbackController AudioFeedbackController => _audioFeedbackController;
-    public RouletteWinVfxController WinVfxController => _winVfxController;
-    public RouletteSettlementVfxController SettlementVfxController => _settlementVfxController;
+    public RouletteVfxManager VfxManager => _vfxManager;
     public float DefaultStartingBalance => _defaultStartingBalance;
-    public TableVariantLoader TableVariantLoader => _tableVariantLoader;
     public ChipManager ChipManager => _chipManager;
-    public BetManager BetManager => _betManager;
-    public WheelController WheelController => _wheelController;
+    public RouletteTableVariant ActiveTable => _activeTable;
+    public BetManager BetManager => _activeTable != null ? _activeTable.BetManager : null;
+    public WheelController WheelController => _activeTable != null ? _activeTable.WheelController : null;
     public bool IsChipInteractionEnabled { get; private set; }
     public GameSaveData SaveData { get; private set; }
     public PlayerData PlayerData { get; private set; }
@@ -83,8 +71,7 @@ public sealed class GameContext : MonoBehaviour
     private void Awake()
     {
         EnsureAudioFeedbackController();
-        EnsureWinVfxController();
-        EnsureSettlementVfxController();
+        EnsureVfxManager();
         _stateMachine = new StateMachine();
     }
 
@@ -132,38 +119,23 @@ public sealed class GameContext : MonoBehaviour
         PlayerData = SaveData.GetProfile(variant);
     }
 
-    public bool LoadTableVariant(RouletteVariant variant)
+    public bool SetActiveTable(RouletteVariant variant, RouletteTableVariant tableVariant)
     {
-        ActiveRouletteVariant = variant;
-
-        if (_tableVariantLoader == null)
-        {
-            _tableVariantLoader = FindFirstObjectByType<TableVariantLoader>();
-        }
-
-        if (_tableVariantLoader == null)
-        {
-            return _betManager != null && _wheelController != null;
-        }
-
-        RouletteTableVariant tableVariant = _tableVariantLoader.LoadVariant(variant);
-
         if (tableVariant == null)
         {
-            return _betManager != null && _wheelController != null;
+            Debug.LogError($"GameContext could not activate a table for {variant} because the table reference is missing.");
+            return false;
         }
 
-        if (tableVariant.BetManager != null)
+        if (tableVariant.BetManager == null || tableVariant.WheelController == null)
         {
-            _betManager = tableVariant.BetManager;
+            Debug.LogError($"Active {variant} table is missing BetManager or WheelController references.");
+            return false;
         }
 
-        if (tableVariant.WheelController != null)
-        {
-            _wheelController = tableVariant.WheelController;
-        }
-
-        return _betManager != null && _wheelController != null;
+        ActiveRouletteVariant = variant;
+        _activeTable = tableVariant;
+        return true;
     }
 
     public void SetChipInteractionEnabled(bool isEnabled)
@@ -186,47 +158,20 @@ public sealed class GameContext : MonoBehaviour
         }
     }
 
-    private void EnsureWinVfxController()
+    private void EnsureVfxManager()
     {
-        if (_winVfxController != null)
+        if (_vfxManager == null)
         {
-            _winVfxController.StopAndClear();
+            _vfxManager = FindFirstObjectByType<RouletteVfxManager>();
+        }
+
+        if (_vfxManager == null)
+        {
+            Debug.LogWarning("GameContext is missing the RouletteVfxManager reference.");
             return;
         }
 
-        GameObject winVfxRoot = GameObject.Find("VFX_Win");
-
-        if (winVfxRoot == null)
-        {
-            return;
-        }
-
-        _winVfxController = winVfxRoot.GetComponent<RouletteWinVfxController>();
-
-        if (_winVfxController == null)
-        {
-            _winVfxController = winVfxRoot.AddComponent<RouletteWinVfxController>();
-        }
-
-        _winVfxController.StopAndClear();
-    }
-
-    private void EnsureSettlementVfxController()
-    {
-        if (_settlementVfxController != null)
-        {
-            _settlementVfxController.StopAndClear();
-            return;
-        }
-
-        _settlementVfxController = GetComponent<RouletteSettlementVfxController>();
-
-        if (_settlementVfxController == null)
-        {
-            _settlementVfxController = gameObject.AddComponent<RouletteSettlementVfxController>();
-        }
-
-        _settlementVfxController.StopAndClear();
+        _vfxManager.StopAndClearAll();
     }
 
     public void SetBettingUiVisible(bool isVisible)
@@ -257,12 +202,13 @@ public sealed class GameContext : MonoBehaviour
             return;
         }
 
-        PlayerData.SavedRoundPhase = _betManager != null && _betManager.ActiveBets.Count > 0
+        BetManager activeBetManager = BetManager;
+        PlayerData.SavedRoundPhase = activeBetManager != null && activeBetManager.ActiveBets.Count > 0
             ? PlayerData.RoundPhase.Betting
             : PlayerData.RoundPhase.None;
         PlayerData.PendingSpinTargetNumber = -1;
-        PlayerData.SavedBets = _betManager != null
-            ? _betManager.CreateSavedBetsSnapshot()
+        PlayerData.SavedBets = activeBetManager != null
+            ? activeBetManager.CreateSavedBetsSnapshot()
             : new System.Collections.Generic.List<PlayerData.SavedBetData>();
         SaveActiveGameData();
     }
@@ -276,8 +222,9 @@ public sealed class GameContext : MonoBehaviour
 
         PlayerData.SavedRoundPhase = PlayerData.RoundPhase.Spinning;
         PlayerData.PendingSpinTargetNumber = pendingSpinTargetNumber;
-        PlayerData.SavedBets = _betManager != null
-            ? _betManager.CreateSavedBetsSnapshot()
+        BetManager activeBetManager = BetManager;
+        PlayerData.SavedBets = activeBetManager != null
+            ? activeBetManager.CreateSavedBetsSnapshot()
             : new System.Collections.Generic.List<PlayerData.SavedBetData>();
         SaveActiveGameData();
     }

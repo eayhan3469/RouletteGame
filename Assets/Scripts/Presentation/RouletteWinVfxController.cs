@@ -2,7 +2,7 @@ using System.Collections;
 using UnityEngine;
 
 /// <summary>
-/// Plays the win particle sequence under the VFX_Win scene object.
+/// Plays the configured win particle sequence.
 /// </summary>
 [DisallowMultipleComponent]
 public sealed class RouletteWinVfxController : MonoBehaviour

@@ -21,6 +21,9 @@ public abstract class GameStateBase : IGameState
 
     protected void LogLifecycle(string phase)
     {
+#if UNITY_EDITOR
+        // In the editor, include the full context path for easier debugging.
         Debug.Log($"{GetType().Name} {phase} on {Context.name}");
+#endif
     }
 }

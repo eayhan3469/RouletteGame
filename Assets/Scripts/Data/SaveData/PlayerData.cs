@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 
 /// <summary>
-/// Serializable player save model containing long-lived progression, table settings,
+/// Serializable player save model containing long-lived progression
 /// and resumable round state.
 /// </summary>
 [System.Serializable]

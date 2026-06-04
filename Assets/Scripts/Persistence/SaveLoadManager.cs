@@ -81,7 +81,7 @@ public static class SaveLoadManager
         }
         catch (Exception exception)
         {
-            Debug.LogError($"Failed to delete player data. Exception: {exception.Message}");
+            Debug.LogError($"Failed to delete game data. Exception: {exception.Message}");
             return false;
         }
     }

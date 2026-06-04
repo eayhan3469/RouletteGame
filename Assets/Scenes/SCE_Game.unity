@@ -5234,6 +5234,7 @@ GameObject:
   - component: {fileID: 100100012}
   - component: {fileID: 100100013}
   - component: {fileID: 100100014}
+  - component: {fileID: 100100015}
   m_Layer: 0
   m_Name: GameContext
   m_TagString: Untagged
@@ -5276,13 +5277,9 @@ MonoBehaviour:
   _resultUIController: {fileID: 510030014}
   _statisticsUIController: {fileID: 800100004}
   _audioFeedbackController: {fileID: 100100013}
-  _winVfxController: {fileID: 942255794}
-  _settlementVfxController: {fileID: 100100014}
+  _vfxManager: {fileID: 100100015}
   _defaultStartingBalance: 1000
-  _tableVariantLoader: {fileID: 0}
   _chipManager: {fileID: 100200042}
-  _betManager: {fileID: 0}
-  _wheelController: {fileID: 0}
 --- !u!114 &100100013
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5359,6 +5356,20 @@ MonoBehaviour:
   _dealerTargetScatterRadius: 0.35
   _minChipSpinDegrees: 180
   _maxChipSpinDegrees: 540
+--- !u!114 &100100015
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100100010}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4db07d9af3564a44ab70547f60a3aa67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _winVfxController: {fileID: 942255794}
+  _settlementVfxController: {fileID: 100100014}
 --- !u!1 &100100020
 GameObject:
   m_ObjectHideFlags: 0

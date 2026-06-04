@@ -24,8 +24,7 @@ public sealed class ResultState : GameStateBase
     {
         LogLifecycle($"Enter - Winning Number: {_winningNumber}");
         Context.SetChipInteractionEnabled(false);
-        Context.WinVfxController?.StopAndClear();
-        Context.SettlementVfxController?.StopAndClear();
+        Context.VfxManager?.StopAndClearAll();
 
         float totalBet = Context.BetManager != null
             ? Context.BetManager.TotalBet
@@ -73,8 +72,7 @@ public sealed class ResultState : GameStateBase
 
         Context.BetManager?.ClearTableBets();
         Context.ResultUIController?.Hide();
-        Context.WinVfxController?.StopAndClear();
-        Context.SettlementVfxController?.StopAndClear();
+        Context.VfxManager?.StopAndClearAll();
         LogLifecycle("Exit");
     }
 
@@ -89,7 +87,7 @@ public sealed class ResultState : GameStateBase
 
             if (roundResult > 0f)
             {
-                Context.WinVfxController?.PlayWinSequence();
+                Context.VfxManager?.PlayWinSequence();
             }
         }
         else
@@ -98,7 +96,7 @@ public sealed class ResultState : GameStateBase
 
             if (roundResult > 0f)
             {
-                Context.WinVfxController?.PlayWinSequence();
+                Context.VfxManager?.PlayWinSequence();
             }
         }
 
@@ -106,12 +104,12 @@ public sealed class ResultState : GameStateBase
         {
             yield return new WaitForSeconds(ResultDisplayDuration);
             Context.ResultUIController.Hide();
-            Context.WinVfxController?.StopAndClear();
+            Context.VfxManager?.StopAndClearAll();
         }
 
-        if (Context.SettlementVfxController != null)
+        if (Context.VfxManager != null && Context.VfxManager.HasSettlementController)
         {
-            yield return Context.SettlementVfxController.PlaySettlement(
+            yield return Context.VfxManager.PlaySettlement(
                 roundResult,
                 amountWon,
                 Context.BetManager != null ? Context.BetManager.ActiveBets : null,
