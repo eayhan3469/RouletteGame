@@ -237,6 +237,8 @@ public sealed class WheelController : MonoBehaviour
         float pocketRattleDuration = (_dropDuration - pocketEntryDropDuration) + _pocketSettleDuration;
         float travelDuration = _rimTravelDuration + pocketEntryDropDuration;
         Vector3 targetLocalPosition = _wheelTransform.InverseTransformPoint(targetSlot.transform.position);
+        // Calculate exactly where the target slot will be after the travel duration
+        // to ensure the ball correctly lands on the deterministically chosen number.
         float projectedWheelRotationDegrees = EstimateWheelRotationDuringVisiblePhase(travelDuration);
         Vector3 projectedTargetWorldPosition = EvaluateProjectedSlotWorldPosition(targetLocalPosition, projectedWheelRotationDegrees);
         Vector3 projectedTargetOffset = projectedTargetWorldPosition - orbitCenterWorldPosition;
@@ -274,6 +276,8 @@ public sealed class WheelController : MonoBehaviour
 
         float elapsedTime = 0f;
 
+        // Execute the rim travel phase. We decelerate the ball speed along a quadratic curve
+        // and physically blend its position inwards to simulate dropping into the wheel center.
         while (elapsedTime < travelDuration)
         {
             float deltaTime = Time.deltaTime;
@@ -335,6 +339,8 @@ public sealed class WheelController : MonoBehaviour
         float pocketSettleElapsedTime = 0f;
         int nextPocketBounceEventIndex = 0;
 
+        // Execute the pocket rattle phase. The ball is now trapped in the target slot, 
+        // procedural bouncing back and forth is applied before it comes to a complete rest.
         while (pocketSettleElapsedTime < pocketRattleDuration)
         {
             float deltaTime = Time.deltaTime;

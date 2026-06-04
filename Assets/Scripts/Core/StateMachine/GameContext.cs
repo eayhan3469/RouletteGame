@@ -85,6 +85,20 @@ public sealed class GameContext : MonoBehaviour
         _stateMachine.Tick();
     }
 
+    // Auto-save logic triggers gracefully when the application is suspended or closed.
+    private void OnApplicationPause(bool isPaused)
+    {
+        if (isPaused)
+        {
+            SaveActiveGameData();
+        }
+    }
+
+    private void OnApplicationQuit()
+    {
+        SaveActiveGameData();
+    }
+
     public void SetMainMenuVisible(bool isVisible)
     {
         if (_mainMenuPanel == null)

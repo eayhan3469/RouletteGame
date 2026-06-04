@@ -75,6 +75,9 @@ public sealed class BetManager : MonoBehaviour
         NotifyTotalBetChanged();
     }
 
+    // Calculates total payout across all active bets for the provided winning number.
+    // Iterates through active spots, checks if the spot covers the winning number, 
+    // and calculates payout = initial wager + (initial wager * payout multiplier).
     public float CalculateWinnings(int winningNumber)
     {
         float totalPayout = 0f;
