@@ -190,22 +190,21 @@ public sealed class WheelController : MonoBehaviour
     /// <summary>
     /// Starts a deterministic wheel spin that lands the ball on the requested number.
     /// </summary>
-    public void SpinToNumber(int targetNumber, Action onSpinComplete)
+    public bool SpinToNumber(int targetNumber, Action onSpinComplete)
     {
         CacheReferencesIfNeeded();
         BuildSlotLookup();
 
         if (!ValidateSetup())
         {
-            onSpinComplete?.Invoke();
-            return;
+            return false;
         }
 
         if (!_slotLookup.TryGetValue(targetNumber, out WheelSlot targetSlot) || targetSlot == null)
         {
-            Debug.LogWarning($"WheelController could not find a slot for number {targetNumber}.");
-            onSpinComplete?.Invoke();
-            return;
+            Debug.LogError(
+                $"WheelController on '{name}' could not start spin because no WheelSlot exists for target number {FormatRouletteNumber(targetNumber)} ({targetNumber}).");
+            return false;
         }
 
         if (_spinRoutine != null)
@@ -216,6 +215,7 @@ public sealed class WheelController : MonoBehaviour
 
         StopHideLandedBallRoutine();
         _spinRoutine = StartCoroutine(SpinRoutine(targetSlot, onSpinComplete));
+        return true;
     }
 
     private IEnumerator SpinRoutine(WheelSlot targetSlot, Action onSpinComplete)
@@ -593,19 +593,19 @@ public sealed class WheelController : MonoBehaviour
     {
         if (_wheelTransform == null)
         {
-            Debug.LogWarning("WheelController is missing the wheel transform reference.");
+            Debug.LogError($"WheelController on '{name}' is missing the wheel transform reference.");
             return false;
         }
 
         if (_ballTransform == null)
         {
-            Debug.LogWarning("WheelController is missing the ball transform reference.");
+            Debug.LogError($"WheelController on '{name}' is missing the ball transform reference.");
             return false;
         }
 
         if (_ballRimPivot == null)
         {
-            Debug.LogWarning("WheelController is missing the ball rim pivot reference.");
+            Debug.LogError($"WheelController on '{name}' is missing the ball rim pivot reference.");
             return false;
         }
 
@@ -671,33 +671,44 @@ public sealed class WheelController : MonoBehaviour
 
     private void BuildSlotLookup()
     {
-        if ((_allSlots == null || _allSlots.Count == 0) && _wheelTransform != null)
+        List<WheelSlot> sourceSlots = _allSlots;
+
+        if (_wheelTransform != null)
         {
             WheelSlot[] hierarchySlots = _wheelTransform.GetComponentsInChildren<WheelSlot>(true);
 
             if (hierarchySlots.Length > 0)
             {
                 _allSlots = new List<WheelSlot>(hierarchySlots);
+                sourceSlots = _allSlots;
             }
         }
 
         _slotLookup.Clear();
 
-        if (_allSlots == null)
+        if (sourceSlots == null || sourceSlots.Count == 0)
         {
+            Debug.LogError($"WheelController on '{name}' could not find any WheelSlot references.");
             return;
         }
 
-        for (int i = 0; i < _allSlots.Count; i++)
+        for (int i = 0; i < sourceSlots.Count; i++)
         {
-            WheelSlot slot = _allSlots[i];
+            WheelSlot slot = sourceSlots[i];
 
             if (slot == null)
             {
                 continue;
             }
 
-            _slotLookup[slot.Number] = slot;
+            if (_slotLookup.ContainsKey(slot.Number))
+            {
+                Debug.LogWarning(
+                    $"WheelController on '{name}' found duplicate WheelSlot number {FormatRouletteNumber(slot.Number)} ({slot.Number}). Keeping the first slot and ignoring '{slot.name}'.");
+                continue;
+            }
+
+            _slotLookup.Add(slot.Number, slot);
         }
     }
 
@@ -731,5 +742,10 @@ public sealed class WheelController : MonoBehaviour
         }
 
         return targetTransform.GetComponent<Renderer>() != null;
+    }
+
+    private string FormatRouletteNumber(int number)
+    {
+        return number == 37 ? "00" : number.ToString();
     }
 }

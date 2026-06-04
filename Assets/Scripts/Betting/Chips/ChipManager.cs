@@ -138,11 +138,11 @@ public sealed class ChipManager : MonoBehaviour
 
     public void ReturnChipToTray(int chipValue)
     {
-        TrayStackState trayStackState = GetTrayStackStateForChipValue(chipValue);
+        TrayStackState trayStackState = EnsureTrayStackState(chipValue);
 
         if (trayStackState == null)
         {
-            Debug.LogWarning($"ChipManager could not return chip value {chipValue} because no tray stack state was found.");
+            Debug.LogWarning($"ChipManager could not return chip value {chipValue} because no matching tray slot was found.");
             return;
         }
 
@@ -293,7 +293,7 @@ public sealed class ChipManager : MonoBehaviour
 
     public bool TryGetChipStackTarget(int chipValue, out Vector3 targetPosition, out Transform stackTransform)
     {
-        TrayStackState trayStackState = GetTrayStackStateForChipValue(chipValue);
+        TrayStackState trayStackState = EnsureTrayStackState(chipValue);
 
         if (trayStackState != null && trayStackState.TraySlot != null)
         {
@@ -664,6 +664,50 @@ public sealed class ChipManager : MonoBehaviour
             if (trayStackState != null && trayStackState.ChipValue == chipValue)
             {
                 return trayStackState;
+            }
+        }
+
+        return null;
+    }
+
+    private TrayStackState EnsureTrayStackState(int chipValue)
+    {
+        TrayStackState existingState = GetTrayStackStateForChipValue(chipValue);
+
+        if (existingState != null)
+        {
+            return existingState;
+        }
+
+        ChipTraySlot traySlot = GetTraySlotForChipValue(chipValue);
+
+        if (traySlot == null || traySlot.TraySlot == null)
+        {
+            return null;
+        }
+
+        TrayStackState trayStackState = new TrayStackState
+        {
+            ChipValue = traySlot.ChipValue,
+            HiddenReserveCount = 0,
+            MaxVisibleChipCount = Mathf.Max(1, traySlot.MaxVisibleChipCount),
+            TraySlot = traySlot.TraySlot,
+            VisualDefinition = GetChipVisualDefinition(traySlot.ChipValue)
+        };
+
+        _trayStackStates[traySlot.TraySlot] = trayStackState;
+        return trayStackState;
+    }
+
+    private ChipTraySlot GetTraySlotForChipValue(int chipValue)
+    {
+        for (int i = 0; i < _chipTraySlots.Count; i++)
+        {
+            ChipTraySlot chipTraySlot = _chipTraySlots[i];
+
+            if (chipTraySlot != null && chipTraySlot.ChipValue == chipValue)
+            {
+                return chipTraySlot;
             }
         }
 

@@ -37,7 +37,14 @@ public sealed class SpinningState : GameStateBase
         _wheelController.BallPocketBounced += HandleBallPocketBounced;
         _wheelController.BallPocketLanded -= HandleBallPocketLanded;
         _wheelController.BallPocketLanded += HandleBallPocketLanded;
-        _wheelController.SpinToNumber(_targetNumber, HandleSpinCompleted);
+
+        if (!_wheelController.SpinToNumber(_targetNumber, HandleSpinCompleted))
+        {
+            UnityEngine.Debug.LogError(
+                $"SpinningState could not start spin for target number {FormatRouletteNumber(_targetNumber)} ({_targetNumber}). Returning to BettingState without resolving the round.");
+            Context.SaveCurrentBettingState();
+            StateMachine.ChangeState(new BettingState(Context, StateMachine));
+        }
     }
 
     public override void Tick()
@@ -109,5 +116,10 @@ public sealed class SpinningState : GameStateBase
         float normalizedIntensity = UnityEngine.Mathf.Clamp01(
             _wheelController.CurrentBallDegreesPerSecond / maxBallSpeed);
         Context.AudioFeedbackController.SetBallTravelIntensity(normalizedIntensity);
+    }
+
+    private string FormatRouletteNumber(int number)
+    {
+        return number == 37 ? "00" : number.ToString();
     }
 }
