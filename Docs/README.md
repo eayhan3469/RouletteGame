@@ -63,7 +63,8 @@ To demonstrate the clean and data-driven architecture of this project, here are 
 
 ## 🎥 Demo Video
 
-<video controls src="GamePlayVideo-1.mp4" title="Title"></video>
+https://github.com/user-attachments/assets/aae9421d-05c9-4a1f-b775-f0aa245bfd18
+
 
 ## 🛠️ Build & Verification Notes
 
